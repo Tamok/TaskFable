@@ -12,7 +12,7 @@ function Feed({ stories }) {
             ))}
           </div>
           <div className="story-footer">
-            <span>XP: {story.xp}</span> | <span>Currency: {story.currency}</span>
+            <span style={{ color: "inherit" }}>XP: {story.xp}</span> | <span style={{ color: "inherit" }}>Currency: {story.currency}</span>
             <br />
             <small>{new Date(story.created_at).toLocaleString()}</small>
           </div>

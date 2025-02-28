@@ -5,7 +5,7 @@ from models import Task, TaskStatus, User, Comment, TaskHistory
 from db import SessionLocal
 from llm_integration import generate_story_for_task
 from routers.stories import add_story
-from pydantic import BaseModel
+from pydantic import BaseModel, field_validator
 import logging_config
 from sqlalchemy import text
 
@@ -44,6 +44,10 @@ class CommentEdit(BaseModel):
     comment_id: int
     new_content: str
     username: str
+
+    @field_validator("comment_id", mode="before")
+    def cast_comment_id(cls, v):
+        return int(v)
 
 @router.get("/", response_model=list)
 def get_tasks(viewer_username: str = Query(...), db: Session = Depends(get_db)):

@@ -178,3 +178,13 @@
 2025-02-27 21:45:05,512 - INFO - Application startup complete.
 2025-02-27 21:45:27,816 - INFO - Comment added to task 1 by user Tamok
 2025-02-27 21:46:33,350 - INFO - Application shutdown complete.
+2025-02-27 22:08:39,102 - INFO - Application startup complete.
+2025-02-27 22:08:49,621 - INFO - Task created: 2 by user Tamok
+2025-02-27 22:08:53,972 - INFO - Task created: 3 by user Tamok
+2025-02-27 22:09:09,205 - INFO - Comment added to task 2 by user Test
+2025-02-27 22:09:11,763 - INFO - Comment added to task 2 by user Tamok
+2025-02-27 22:10:04,462 - INFO - Task 1 status updated to TaskStatus.done by user Tamok
+2025-02-27 22:19:36,720 - INFO - Application shutdown complete.
+2025-02-27 22:22:19,813 - INFO - Application startup complete.
+2025-02-27 22:22:27,962 - INFO - Comment added to task 2 by user Tamok
+2025-02-27 22:23:22,206 - INFO - Application shutdown complete.

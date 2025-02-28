@@ -61,3 +61,15 @@ User Tamok purged all tasks
 Task created: test by Tamok
 Task 1 status changed to Doing by Tamok
 Comment added to task 1 by Tamok
+Task created: test by Tamok
+Task created: test by Tamok
+Comment added to task 2 by Test
+Comment added to task 2 by Tamok
+User Tamok changed show_tooltips to true
+User Tamok changed dark_mode to true
+User Tamok changed show_tooltips to false
+User Tamok changed dark_mode to false
+Task 1 status changed to Done by Tamok
+Comment added to task 2 by Tamok
+User Tamok changed dark_mode to true
+User Tamok changed dark_mode to false

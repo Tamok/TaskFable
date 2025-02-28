@@ -51,7 +51,7 @@ function Card({ task, refreshTasks, user }) {
         task_id: task.id,
         content: commentText,
         username: user.username
-      });
+      }, { headers: { "Content-Type": "application/json" } });
       setCommentText("");
       refreshTasks();
       logFrontendEvent(`Comment added to task ${task.id} by ${user.username}`);
@@ -64,7 +64,7 @@ function Card({ task, refreshTasks, user }) {
     try {
       await axios.put(`${CONFIG.BACKEND_URL}/tasks/${task.id}/edit?username=${user.username}`, {
         description: newDescription
-      });
+      }, { headers: { "Content-Type": "application/json" } });
       setIsEditingDescription(false);
       refreshTasks();
       logFrontendEvent(`Task ${task.id} description edited by ${user.username}`);
@@ -79,7 +79,7 @@ function Card({ task, refreshTasks, user }) {
         comment_id: commentId,
         new_content: editingCommentText,
         username: user.username
-      });
+      }, { headers: { "Content-Type": "application/json" } });
       setEditingCommentId(null);
       setEditingCommentText("");
       refreshTasks();
@@ -89,7 +89,7 @@ function Card({ task, refreshTasks, user }) {
     }
   };
 
-  // For private tasks, non-owners see "Solo Adventure" as title, but owner info is still shown.
+  // For private tasks, non-owners see "Solo Adventure" as title, but still see owner info.
   if (task.is_private && !isOwner) {
     return (
       <div className={`card ${task.color}`}>
@@ -113,7 +113,7 @@ function Card({ task, refreshTasks, user }) {
         <br />
         <small>Owner: {task.owner_username}{task.co_owners && task.co_owners.length > 0 && ` | Co-owners: ${task.co_owners.join(", ")}`}</small>
       </h3>
-      <div className="description" style={{ position: "relative", paddingRight: "30px", wordWrap: "break-word" }}>
+      <div className="description" style={{ position: "relative", paddingRight: "30px", whiteSpace: "normal", wordWrap: "break-word" }}>
         {isEditingDescription ? (
           <>
             <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} />
