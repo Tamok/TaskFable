@@ -1,0 +1,181 @@
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background-color: #fff;
+    color: #000;
+  }
+  
+  body.dark {
+    background-color: #121212;
+    color: #eee;
+  }
+  
+  header {
+    background: #333;
+    color: #fff;
+    padding: 10px;
+  }
+  
+  header nav button {
+    margin-right: 10px;
+    padding: 5px 10px;
+    background: #555;
+    color: #fff;
+    border: none;
+    cursor: pointer;
+  }
+  
+  header nav button:hover {
+    background: #777;
+  }
+  
+  .dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  
+  .board-container {
+    flex: 2;
+    min-width: 300px;
+    padding: 10px;
+    box-sizing: border-box;
+  }
+  
+  .feed-container {
+    flex: 1;
+    min-width: 250px;
+    padding: 10px;
+    box-sizing: border-box;
+    background: #f9f9f9;
+    overflow-y: auto;
+    max-height: calc(100vh - 150px);
+  }
+  
+  body.dark .feed-container {
+    background: #1e1e1e;
+  }
+  
+  .board {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+  }
+  
+  .column {
+    background: #e0e0e0;
+    padding: 10px;
+    margin: 5px;
+    flex: 1;
+    min-width: 200px;
+    border-radius: 4px;
+    box-sizing: border-box;
+  }
+  
+  body.dark .column {
+    background: #2e2e2e;
+  }
+  
+  .card {
+    background: #fff;
+    margin: 10px 0;
+    padding: 10px;
+    border-radius: 4px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: relative;
+    word-wrap: break-word;
+  }
+  
+  body.dark .card {
+    background: #1e1e1e;
+    box-shadow: 0 2px 4px rgba(255,255,255,0.1);
+  }
+  
+  .edit-button {
+    background: transparent;
+    border: none;
+    font-size: 0.8em;
+    cursor: pointer;
+    color: #555;
+  }
+  
+  body.dark .edit-button {
+    color: #ccc;
+  }
+  
+  /* Position edit button for description inside its container */
+  .description {
+    position: relative;
+    padding-right: 30px;
+  }
+  .description .edit-button {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+  }
+  
+  /* For comment edit, position button inline before username */
+  .comment .edit-button {
+    margin-right: 5px;
+  }
+  
+  .comments input {
+    width: 100%;
+    margin-top: 5px;
+  }
+  
+  .create-task-form {
+    margin-bottom: 20px;
+  }
+  
+  .settings, .logs {
+    padding: 20px;
+  }
+  
+  .story {
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    padding: 10px;
+    border-radius: 4px;
+  }
+  
+  body.dark .story {
+    border: 1px solid #444;
+  }
+  
+  .story-footer {
+    border-top: 1px solid #eee;
+    margin-top: 10px;
+    padding-top: 5px;
+    text-align: right;
+    font-size: 0.9em;
+    color: #333; /* Darker text for better contrast in dark mode */
+  }
+  
+  .history {
+    margin-top: 10px;
+  }
+  
+  .history-entry {
+    font-size: 0.8em;
+  }
+  
+  .co-owner-picklist label {
+    margin-right: 10px;
+  }
+  
+  .dev-section {
+    margin-top: 20px;
+    border-top: 1px solid #ccc;
+    padding-top: 10px;
+  }
+  
+  @media (max-width: 768px) {
+    .dashboard {
+      flex-direction: column;
+    }
+    .board-container, .feed-container {
+      min-width: 100%;
+    }
+  }
+  

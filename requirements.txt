@@ -1,0 +1,7 @@
+fastapi
+uvicorn
+sqlalchemy
+transformers
+passlib
+pydantic[email]
+bcrypt
