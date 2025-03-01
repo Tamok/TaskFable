@@ -1,9 +1,19 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from routers import tasks, stories, users, logs
 import logging_config
 
-app = FastAPI(title="Gamified Task Portal")
+app = FastAPI(title="TaskFable API", version="0.1.0", docs_url="/")
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    logging_config.backend_logger.error(f"Validation error on {request.url}: {exc.errors()}")
+    return JSONResponse(
+        status_code=422,
+        content={"detail": exc.errors()},
+    )
 
 # Configure CORS
 app.add_middleware(

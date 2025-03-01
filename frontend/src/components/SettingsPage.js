@@ -2,12 +2,10 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import CONFIG from "../config";
 import { logFrontendEvent } from "../utils/logger";
+import moment from "moment-timezone";
 
-const TIMEZONES = [
-  "UTC", "America/New_York", "America/Chicago", "America/Denver", "America/Los_Angeles",
-  "Europe/London", "Europe/Paris", "Europe/Berlin", "Asia/Tokyo", "Asia/Shanghai",
-  "Australia/Sydney" // Add more as needed or generate programmatically
-];
+// Use moment-timezone to get a complete list of timezones
+const TIMEZONES = moment.tz.names();
 
 function SettingsPage({ currentUser, refreshUser }) {
   const [skipConfirmBegin, setSkipConfirmBegin] = useState(currentUser.skip_confirm_begin);

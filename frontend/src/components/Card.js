@@ -77,6 +77,7 @@ function Card({ task, refreshTasks, user }) {
     try {
       await axios.put(`${CONFIG.BACKEND_URL}/tasks/comment/edit`, {
         comment_id: commentId,
+        task_id: task.id,
         new_content: editingCommentText,
         username: user.username
       }, { headers: { "Content-Type": "application/json" } });
@@ -88,6 +89,8 @@ function Card({ task, refreshTasks, user }) {
       console.error("Error editing comment:", error);
     }
   };
+  
+  
 
   // For private tasks, non-owners see "Solo Adventure" as title, but still see owner info.
   if (task.is_private && !isOwner) {

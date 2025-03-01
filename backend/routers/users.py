@@ -74,6 +74,11 @@ def login_or_signup(user_data: UserLogin, db: Session = Depends(get_db)):
             }
         }
 
+@router.get("/list", response_model=list)
+def list_users(db: Session = Depends(get_db)):
+    users = db.query(User).all()
+    return [user.username for user in users]
+
 @router.get("/{username}", response_model=dict)
 def get_user(username: str, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == username).first()
@@ -117,8 +122,3 @@ def update_user_settings(username: str, settings: dict, db: Session = Depends(ge
         "skip_confirm_begin": user.skip_confirm_begin,
         "skip_confirm_end": user.skip_confirm_end
     }}
-
-@router.get("/all", response_model=list)
-def get_all_users(db: Session = Depends(get_db)):
-    users = db.query(User).all()
-    return [user.username for user in users]

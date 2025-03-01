@@ -42,12 +42,23 @@ class TaskEdit(BaseModel):
 
 class CommentEdit(BaseModel):
     comment_id: int
+    task_id: int
     new_content: str
     username: str
 
     @field_validator("comment_id", mode="before")
     def cast_comment_id(cls, v):
-        return int(v)
+        try:
+            return int(v)
+        except Exception as e:
+            raise ValueError("comment_id must be an integer") from e
+
+    @field_validator("task_id", mode="before")
+    def cast_task_id(cls, v):
+        try:
+            return int(v)
+        except Exception as e:
+            raise ValueError("task_id must be an integer") from e
 
 @router.get("/", response_model=list)
 def get_tasks(viewer_username: str = Query(...), db: Session = Depends(get_db)):
@@ -169,10 +180,15 @@ def update_task_status(task_id: int, status_data: StatusUpdate, db: Session = De
     if new_status not in allowed_transitions[current_status]:
         raise HTTPException(status_code=400, detail=f"Invalid transition from {current_status} to {new_status}")
     
+    logging_config.backend_logger.debug(
+        f"User {status_data.username} requested status change for task {task.id} from {current_status} to {new_status}"
+    )
+    
     task.status = new_status
     db.commit()
     db.refresh(task)
     logging_config.backend_logger.info(f"Task {task.id} status updated to {new_status} by user {status_data.username}")
+    
     history_record = TaskHistory(task_id=task.id, status=new_status)
     db.add(history_record)
     db.commit()
@@ -182,6 +198,11 @@ def update_task_status(task_id: int, status_data: StatusUpdate, db: Session = De
         add_story(task_id, task.owner_id, story_text, xp, currency, db)
     
     if new_status == TaskStatus.done:
+        # Lock the task when marked as done
+        task.locked = True
+        db.commit()
+        logging_config.backend_logger.info(f"Task {task.id} locked as done")
+        
         participants = {task.owner_id}
         for comment in task.comments:
             participants.add(comment.user_id)
@@ -197,6 +218,7 @@ def update_task_status(task_id: int, status_data: StatusUpdate, db: Session = De
             db.commit()
     
     return {"message": "Task updated", "task_id": task.id}
+
 
 @router.post("/comment", response_model=dict)
 def add_comment(comment_data: CommentCreate, db: Session = Depends(get_db)):
@@ -217,6 +239,29 @@ def add_comment(comment_data: CommentCreate, db: Session = Depends(get_db)):
     logging_config.backend_logger.info(f"Comment added to task {task.id} by user {user.username}")
     return {"message": "Comment added", "comment_id": comment.id}
 
+@router.put("/comment/edit", response_model=dict)
+def edit_comment(comment_data: CommentEdit = Body(...), db: Session = Depends(get_db)):
+    # Look up the comment using both comment_id and task_id for extra validation.
+    comment = db.query(Comment).filter(
+        Comment.id == comment_data.comment_id,
+        Comment.task_id == comment_data.task_id
+    ).first()
+    if not comment:
+        raise HTTPException(status_code=404, detail="Comment not found for given task")
+    
+    user = db.query(User).filter(User.username == comment_data.username).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    if comment.user_id != user.id:
+        raise HTTPException(status_code=403, detail="Cannot edit another user's comment")
+    
+    comment.content = comment_data.new_content
+    db.commit()
+    db.refresh(comment)
+    logging_config.backend_logger.info(f"Comment {comment.id} edited by user {user.username}")
+    return {"message": "Comment updated", "comment_id": comment.id}
+
 @router.put("/{task_id}/edit", response_model=dict)
 def edit_task_description(task_id: int, edit_data: TaskEdit, username: str, db: Session = Depends(get_db)):
     task = db.query(Task).filter(Task.id == task_id).first()
@@ -235,20 +280,6 @@ def edit_task_description(task_id: int, edit_data: TaskEdit, username: str, db: 
     db.refresh(task)
     logging_config.backend_logger.info(f"Task {task.id} description edited by user {username}")
     return {"message": "Task description updated", "task_id": task.id}
-
-@router.put("/comment/edit", response_model=dict)
-def edit_comment(comment_data: CommentEdit = Body(...), db: Session = Depends(get_db)):
-    comment = db.query(Comment).filter(Comment.id == comment_data.comment_id).first()
-    if not comment:
-        raise HTTPException(status_code=404, detail="Comment not found")
-    user = db.query(User).filter(User.username == comment_data.username).first()
-    if comment.user_id != user.id:
-        raise HTTPException(status_code=403, detail="Cannot edit another user's comment")
-    comment.content = comment_data.new_content
-    db.commit()
-    db.refresh(comment)
-    logging_config.backend_logger.info(f"Comment {comment.id} edited by user {user.username}")
-    return {"message": "Comment updated", "comment_id": comment.id}
 
 @router.post("/dev/purge", response_model=dict)
 def purge_tasks(db: Session = Depends(get_db)):
