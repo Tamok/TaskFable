@@ -5,7 +5,7 @@ import CONFIG from "../config";
 import { logFrontendEvent } from "../utils/logger";
 import Select from "react-select";
 
-function CreateTaskForm({ refreshTasks, currentUser, isDarkMode }) {
+function CreateTaskForm({ refreshTasks, currentUser, isDarkMode, addNotification }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("blue");
@@ -13,17 +13,15 @@ function CreateTaskForm({ refreshTasks, currentUser, isDarkMode }) {
   const [selectedCoOwners, setSelectedCoOwners] = useState([]);
   const [allUsernames, setAllUsernames] = useState([]);
 
-  // Fetch the list of possible co-owners
   useEffect(() => {
     axios.get(`${CONFIG.BACKEND_URL}/users/list`)
-      .then(res => {
-        const others = res.data.filter(u => u !== currentUser.username);
+      .then((res) => {
+        const others = res.data.filter((u) => u !== currentUser.username);
         setAllUsernames(others);
       })
-      .catch(err => console.error("Error fetching usernames:", err));
+      .catch((err) => console.error("Error fetching usernames:", err));
   }, [currentUser]);
 
-  // Dark-mode friendly React-Select styles
   const customSelectStyles = {
     control: (provided, state) => ({
       ...provided,
@@ -78,7 +76,7 @@ function CreateTaskForm({ refreshTasks, currentUser, isDarkMode }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const coOwnersStr = selectedCoOwners.map(option => option.value).join(",");
+      const coOwnersStr = selectedCoOwners.map((option) => option.value).join(",");
       const taskData = {
         title,
         description,
@@ -95,6 +93,7 @@ function CreateTaskForm({ refreshTasks, currentUser, isDarkMode }) {
       setSelectedCoOwners([]);
       refreshTasks();
       logFrontendEvent(`Task created: ${title} by ${currentUser.username}`);
+      addNotification(`Task created: ${title}`);
     } catch (error) {
       console.error("Error creating task:", error);
       alert(error.response?.data?.detail || "Error creating task");

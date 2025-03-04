@@ -3,6 +3,7 @@ import React, { useState } from "react";
 import axios from "axios";
 import CONFIG from "../config";
 import { logFrontendEvent } from "../utils/logger";
+import moment from "moment-timezone";
 
 function Card({ task, refreshTasks, user }) {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
@@ -12,7 +13,6 @@ function Card({ task, refreshTasks, user }) {
   const [editingCommentText, setEditingCommentText] = useState("");
   const [showHistory, setShowHistory] = useState(false);
 
-  // Determine which statuses are allowed next
   let availableStatuses = [];
   if (task.status === "To-Do") {
     availableStatuses = ["Doing"];
@@ -22,10 +22,9 @@ function Card({ task, refreshTasks, user }) {
     availableStatuses = ["Doing", "Done"];
   }
 
-  const isOwner = (task.owner_username === user.username);
+  const isOwner = task.owner_username === user.username;
   const canAct = !task.locked || isOwner;
 
-  // Change task status with optional confirmations
   const handleStatusChange = async (newStatus) => {
     if (task.status === "To-Do" && newStatus === "Doing" && !user.skip_confirm_begin) {
       const confirmed = window.confirm("Once you begin your adventure, there is no turning back. Proceed?");
@@ -47,7 +46,6 @@ function Card({ task, refreshTasks, user }) {
     }
   };
 
-  // Add a new comment
   const handleAddComment = async () => {
     if (!commentText) return;
     try {
@@ -64,7 +62,6 @@ function Card({ task, refreshTasks, user }) {
     }
   };
 
-  // Edit task description
   const handleEditDescription = async () => {
     try {
       await axios.put(`${CONFIG.BACKEND_URL}/tasks/${task.id}/edit?username=${user.username}`, {
@@ -78,7 +75,6 @@ function Card({ task, refreshTasks, user }) {
     }
   };
 
-  // Edit an existing comment
   const handleEditComment = async (commentId) => {
     try {
       await axios.put(`${CONFIG.BACKEND_URL}/tasks/comment/edit`, {
@@ -96,7 +92,6 @@ function Card({ task, refreshTasks, user }) {
     }
   };
 
-  // If task is private and viewer is not the owner, show a simplified card
   if (task.is_private && !isOwner) {
     return (
       <div className={`card ${task.color}`}>
@@ -109,7 +104,6 @@ function Card({ task, refreshTasks, user }) {
     );
   }
 
-  // Filter out only "Created" and "Done" from the history unless showHistory is toggled
   const filteredHistory = showHistory
     ? task.history
     : task.history.filter(h => h.status === "Created" || h.status === "Done");
@@ -126,8 +120,6 @@ function Card({ task, refreshTasks, user }) {
           {task.co_owners && task.co_owners.length > 0 && ` | Co-owners: ${task.co_owners.join(", ")}`}
         </small>
       </h3>
-
-      {/* DESCRIPTION BLOCK */}
       <div className="description">
         {isEditingDescription ? (
           <>
@@ -142,7 +134,6 @@ function Card({ task, refreshTasks, user }) {
         ) : (
           <>
             <p>{task.description}</p>
-            {/* Tiny pencil icon for editing, if user is the owner and task is not Done */}
             {isOwner && task.status !== "Done" && (
               <button
                 className="edit-icon"
@@ -155,8 +146,6 @@ function Card({ task, refreshTasks, user }) {
           </>
         )}
       </div>
-
-      {/* STATUS CHANGE BUTTONS */}
       <div className="card-actions">
         {availableStatuses.map((status) => (
           <button
@@ -169,8 +158,6 @@ function Card({ task, refreshTasks, user }) {
           </button>
         ))}
       </div>
-
-      {/* COMMENTS */}
       <div className="comments">
         <h4>Comments</h4>
         {task.comments && task.comments.map((comment) => (
@@ -213,8 +200,6 @@ function Card({ task, refreshTasks, user }) {
         />
         <button onClick={handleAddComment} className="btn">Add Comment</button>
       </div>
-
-      {/* HISTORY */}
       <div className="history">
         <h4>
           History
@@ -228,7 +213,9 @@ function Card({ task, refreshTasks, user }) {
         </h4>
         {filteredHistory.map((entry, idx) => (
           <div key={idx} className="history-entry">
-            <span>{entry.status} at {new Date(entry.timestamp).toLocaleString()}</span>
+            <span>
+              {entry.status} at {moment.utc(entry.timestamp).tz(user.timezone).format("YYYY-MM-DD HH:mm:ss")}
+            </span>
           </div>
         ))}
       </div>

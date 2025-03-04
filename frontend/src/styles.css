@@ -11,6 +11,21 @@ body.dark {
   color: #eee;
 }
 
+body.dark input[type="text"],
+body.dark input[type="password"],
+body.dark input[type="email"],
+body.dark textarea,
+body.dark select {
+  background-color: #333;
+  color: #eee;
+  border: 1px solid #555;
+}
+
+body.dark input[type="checkbox"] {
+  accent-color: #c0392b;
+}
+
+
 /* GLOBAL BUTTON STYLE */
 .btn {
   padding: 6px 10px;
@@ -319,6 +334,14 @@ body.dark .log-content {
   cursor: pointer;
 }
 
+/* Timezone picklist narrower in Settings */
+.settings .timezone-picker {
+  max-width: 250px;
+  display: inline-block;
+  vertical-align: middle;
+  margin-left: 10px;
+}
+
 .dev-section {
   margin-top: 20px;
   border-top: 1px solid #ccc;
@@ -335,3 +358,28 @@ body.dark .log-content {
     min-width: 100%;
   }
 }
+
+/* Notifications */
+.notifications-container {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification {
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 4px;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.notification.fade-out {
+  opacity: 0;
+}
+

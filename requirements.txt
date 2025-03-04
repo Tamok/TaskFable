@@ -5,3 +5,5 @@ transformers
 passlib
 pydantic[email]
 bcrypt
+pytz
+tzlocal

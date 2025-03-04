@@ -1,7 +1,8 @@
 // frontend/src/components/Feed.js
 import React from "react";
+import moment from "moment-timezone";
 
-function Feed({ stories }) {
+function Feed({ stories, user }) {
   return (
     <div className="feed">
       <h2>Task Stories Feed</h2>
@@ -15,7 +16,9 @@ function Feed({ stories }) {
           <div className="story-footer">
             <span>XP: {story.xp}</span> | <span>Currency: {story.currency}</span>
             <br />
-            <small>{new Date(story.created_at).toLocaleString()}</small>
+            <small>
+              {moment.utc(story.created_at).tz(user.timezone).format("YYYY-MM-DD HH:mm:ss")}
+            </small>
           </div>
         </div>
       ))}
@@ -24,3 +27,4 @@ function Feed({ stories }) {
 }
 
 export default Feed;
+
