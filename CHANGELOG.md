@@ -1,5 +1,19 @@
 # Changelog
 
+## [2.2.3] - 2025-03-05
+### Added
+- Added a `/server/timezone` endpoint to return the server’s local UTC offset.
+- If a user has no timezone set, the app now automatically fetches and stores the server’s timezone.
+
+### Changed
+- Timestamps in the Story Feed and Task Cards now update dynamically when the timezone is changed, using `moment.utc(...).tz(user.timezone)` and a 24-hour format.
+- The SettingsPage timezone picklist now uses custom react‑select styling that exactly matches the co‑owner picklist in dark mode. It is restricted to a fixed maximum width (250px) so that it appears as a one‑line dropdown with proper spacing.
+- Text inputs, textareas, and selects (as well as checkboxes via the `accent-color` property) are now styled for dark mode, eliminating bright white backgrounds.
+
+### Fixed
+- Fixed the bug where updating the timezone did not trigger a refresh of tasks/stories, ensuring that all displayed timestamps update immediately.
+- Notifications now fade out smoothly before removal.
+
 ## [0.2.2] - 2025-03-01
 ### Improved
 - Converted edit icons for descriptions/comments into small pencil icons.

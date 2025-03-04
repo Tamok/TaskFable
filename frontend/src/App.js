@@ -7,16 +7,48 @@ import CreateTaskForm from "./components/CreateTaskForm";
 import SettingsPage from "./components/SettingsPage";
 import LogsPage from "./components/LogsPage";
 import Login from "./components/Login";
+import Notifications from "./components/Notifications";
 import CONFIG from "./config";
 import "./styles.css";
 
 function App() {
-  const [activeTab, setActiveTab] = useState("dashboard"); // "dashboard", "settings", "logs"
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [tasks, setTasks] = useState([]);
   const [stories, setStories] = useState([]);
-  const [user, setUser] = useState(JSON.parse(localStorage.getItem("user")) || null);
+  const [notifications, setNotifications] = useState([]);
+  const [user, setUser] = useState(() => {
+    const stored = localStorage.getItem("user");
+    return stored ? JSON.parse(stored) : null;
+  });
 
-  // Fetch tasks from the backend
+  // Notifications management
+  const addNotification = (message) => {
+    const id = Date.now();
+    setNotifications((prev) => [...prev, { id, message }]);
+  };
+  const removeNotification = (id) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  // If user has no timezone, fetch the server's timezone
+  useEffect(() => {
+    const initUserTimezone = async () => {
+      if (user && !user.timezone) {
+        try {
+          const res = await axios.get(`${CONFIG.BACKEND_URL}/server/timezone`);
+          const serverTz = res.data.server_timezone;
+          const updatedUser = { ...user, timezone: serverTz };
+          localStorage.setItem("user", JSON.stringify(updatedUser));
+          setUser(updatedUser);
+        } catch (error) {
+          console.error("Error fetching server timezone:", error);
+        }
+      }
+    };
+    initUserTimezone();
+  }, [user]);
+
+  // Fetch tasks and stories from backend
   const fetchTasks = async () => {
     if (!user) return;
     try {
@@ -26,8 +58,6 @@ function App() {
       console.error("Error fetching tasks:", error);
     }
   };
-
-  // Fetch stories from the backend
   const fetchStories = async () => {
     if (!user) return;
     try {
@@ -38,6 +68,7 @@ function App() {
     }
   };
 
+  // Refresh tasks/stories when user changes or timezone changes
   useEffect(() => {
     if (user) {
       fetchTasks();
@@ -50,24 +81,36 @@ function App() {
     }
   }, [user]);
 
-  // Handle user login (both login and signup)
+  // Additionally, re-fetch stories whenever the user's timezone changes
+  useEffect(() => {
+    if (user) {
+      fetchStories();
+      fetchTasks();
+    }
+  }, [user?.timezone]);
+
+  // Handle login and persist user
   const handleUserLogin = (userData) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
-  // Refresh user info from the backend
+  // Refresh user details and re-fetch tasks/stories so timestamps update
   const refreshUser = async () => {
+    if (!user) return;
     try {
       const res = await axios.get(`${CONFIG.BACKEND_URL}/users/${user.username}`);
-      setUser(res.data);
-      localStorage.setItem("user", JSON.stringify(res.data));
+      const updatedUser = res.data;
+      setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      await fetchTasks();
+      await fetchStories();
     } catch (error) {
       console.error("Error refreshing user:", error);
     }
   };
 
-  // Toggle body class for dark mode
+  // Toggle dark mode on body element
   useEffect(() => {
     if (user && user.dark_mode) {
       document.body.classList.add("dark");
@@ -82,6 +125,7 @@ function App() {
 
   return (
     <div className="App">
+      <Notifications notifications={notifications} removeNotification={removeNotification} />
       <header className="app-header">
         <h1>Gamified Task Portal</h1>
         <p className="welcome-text">Welcome, {user.username}</p>
@@ -94,18 +138,26 @@ function App() {
       {activeTab === "dashboard" && (
         <div className="dashboard">
           <div className="board-container">
-            {/* Pass dark_mode so CreateTaskForm can style React-Select accordingly */}
-            <CreateTaskForm refreshTasks={fetchTasks} currentUser={user} isDarkMode={user.dark_mode} />
+            <CreateTaskForm
+              refreshTasks={fetchTasks}
+              currentUser={user}
+              isDarkMode={user.dark_mode}
+              addNotification={addNotification}
+            />
             <Board tasks={tasks} refreshTasks={fetchTasks} user={user} />
           </div>
           <div className="feed-container">
-            <Feed stories={stories} />
+              <Feed key={user.timezone} stories={stories} user={user} />
           </div>
         </div>
       )}
       {activeTab === "settings" && (
         <div className="page-container">
-          <SettingsPage currentUser={user} refreshUser={refreshUser} />
+          <SettingsPage
+            currentUser={user}
+            refreshUser={refreshUser}
+            addNotification={addNotification}
+          />
         </div>
       )}
       {activeTab === "logs" && (

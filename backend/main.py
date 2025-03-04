@@ -1,9 +1,14 @@
+# backend/main.py
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from routers import tasks, stories, users, logs
 import logging_config
+
+from datetime import datetime
+import pytz
+from tzlocal import get_localzone
 
 app = FastAPI(title="TaskFable API", version="0.1.0", docs_url="/")
 
@@ -18,7 +23,7 @@ async def validation_exception_handler(request: Request, exc: RequestValidationE
 # Configure CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, specify allowed origins
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -37,6 +42,19 @@ def startup_event():
 @app.on_event("shutdown")
 def shutdown_event():
     logging_config.backend_logger.info("Application shutdown complete.")
+
+@app.get("/server/timezone")
+def get_server_timezone():
+    """
+    Returns the server's local timezone offset in 'UTC±HH:MM' format.
+    """
+    local_zone = get_localzone()
+    offset = local_zone.utcoffset(datetime.now())
+    sign = "+" if offset.total_seconds() >= 0 else "-"
+    hours = int(abs(offset.total_seconds()) // 3600)
+    minutes = int((abs(offset.total_seconds()) % 3600) // 60)
+    offset_str = f"UTC{sign}{hours:02d}:{minutes:02d}"
+    return {"server_timezone": offset_str}
 
 if __name__ == "__main__":
     import uvicorn

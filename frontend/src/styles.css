@@ -11,6 +11,45 @@ body.dark {
   color: #eee;
 }
 
+/* Dark mode for inputs, textareas, selects */
+body.dark input[type="text"],
+body.dark input[type="password"],
+body.dark input[type="email"],
+body.dark textarea,
+body.dark select {
+  background-color: #333;
+  color: #eee;
+  border: 1px solid #555;
+}
+
+body.dark input[type="checkbox"] {
+  accent-color: #c0392b;
+}
+
+/* Custom dark mode checkbox styling */
+body.dark input[type="checkbox"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #555;
+  background-color: #333;
+  position: relative;
+}
+body.dark input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 0px;
+  width: 4px;
+  height: 8px;
+  border: solid #c0392b;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+
 /* GLOBAL BUTTON STYLE */
 .btn {
   padding: 6px 10px;
@@ -317,6 +356,15 @@ body.dark .log-content {
 
 .settings label {
   cursor: pointer;
+  display: block;
+  margin-bottom: 5px;
+}
+
+/* Timezone picklist narrower in Settings */
+.settings .timezone-picker {
+  max-width: 250px;
+  display: inline-block;
+  vertical-align: middle;
 }
 
 .dev-section {
@@ -335,3 +383,28 @@ body.dark .log-content {
     min-width: 100%;
   }
 }
+
+/* Notifications */
+.notifications-container {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification {
+  background: rgba(0, 0, 0, 0.8);
+  color: #fff;
+  padding: 10px 15px;
+  border-radius: 4px;
+  opacity: 1;
+  transition: opacity 0.5s ease;
+}
+
+.notification.fade-out {
+  opacity: 0;
+}
+
