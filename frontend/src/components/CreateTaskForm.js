@@ -1,10 +1,11 @@
+// frontend/src/components/CreateTaskForm.js
 import React, { useState, useEffect } from "react";
 import axios from "axios";
 import CONFIG from "../config";
 import { logFrontendEvent } from "../utils/logger";
 import Select from "react-select";
 
-function CreateTaskForm({ refreshTasks, currentUser }) {
+function CreateTaskForm({ refreshTasks, currentUser, isDarkMode }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("blue");
@@ -12,6 +13,7 @@ function CreateTaskForm({ refreshTasks, currentUser }) {
   const [selectedCoOwners, setSelectedCoOwners] = useState([]);
   const [allUsernames, setAllUsernames] = useState([]);
 
+  // Fetch the list of possible co-owners
   useEffect(() => {
     axios.get(`${CONFIG.BACKEND_URL}/users/list`)
       .then(res => {
@@ -21,11 +23,57 @@ function CreateTaskForm({ refreshTasks, currentUser }) {
       .catch(err => console.error("Error fetching usernames:", err));
   }, [currentUser]);
 
-  // Prepare options for react-select
-  const options = allUsernames.map(username => ({
-    value: username,
-    label: username,
-  }));
+  // Dark-mode friendly React-Select styles
+  const customSelectStyles = {
+    control: (provided, state) => ({
+      ...provided,
+      minHeight: "38px",
+      borderRadius: "4px",
+      borderColor: isDarkMode ? "#555" : "#ccc",
+      backgroundColor: isDarkMode ? "#333" : "#fff",
+      boxShadow: state.isFocused
+        ? (isDarkMode ? "0 0 0 1px #999" : "0 0 0 1px #2684FF")
+        : provided.boxShadow,
+    }),
+    input: (provided) => ({
+      ...provided,
+      color: isDarkMode ? "#eee" : "#000",
+    }),
+    placeholder: (provided) => ({
+      ...provided,
+      color: isDarkMode ? "#aaa" : "#999",
+    }),
+    menu: (provided) => ({
+      ...provided,
+      backgroundColor: isDarkMode ? "#333" : "#fff",
+      color: isDarkMode ? "#eee" : "#000",
+    }),
+    option: (provided, state) => ({
+      ...provided,
+      backgroundColor: state.isSelected
+        ? (isDarkMode ? "#666" : "#2684FF")
+        : state.isFocused
+          ? (isDarkMode ? "#555" : "#eee")
+          : (isDarkMode ? "#333" : "#fff"),
+      color: isDarkMode ? "#fff" : "#000",
+    }),
+    multiValue: (provided) => ({
+      ...provided,
+      backgroundColor: isDarkMode ? "#555" : "#e0e0e0",
+    }),
+    multiValueLabel: (provided) => ({
+      ...provided,
+      color: isDarkMode ? "#ddd" : "#333",
+    }),
+    multiValueRemove: (provided) => ({
+      ...provided,
+      color: isDarkMode ? "#ddd" : "#333",
+      ":hover": {
+        backgroundColor: isDarkMode ? "#777" : "#ccc",
+        color: isDarkMode ? "#fff" : "#222",
+      },
+    }),
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -54,66 +102,36 @@ function CreateTaskForm({ refreshTasks, currentUser }) {
   };
 
   return (
-    <div 
-      className="create-task-form" 
-      style={{
-        padding: "10px",
-        background: "#f7f7f7",
-        borderRadius: "5px",
-        marginBottom: "20px"
-      }}
-    >
-      <h2 style={{ margin: "0 0 10px 0" }}>Create a New Task</h2>
-      <form 
-        onSubmit={handleSubmit} 
-        style={{
-          display: "flex",
-          alignItems: "center",
-          flexWrap: "wrap",
-          gap: "10px"
-        }}
-      >
+    <div className="create-task-form">
+      <h2>Create a New Task</h2>
+      <form onSubmit={handleSubmit}>
         <input
           type="text"
           placeholder="Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
-          style={{
-            flex: "1 1 150px",
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ccc"
-          }}
+          className="create-task-input create-task-title"
         />
         <input
           type="text"
           placeholder="Description (optional)"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          style={{
-            flex: "2 1 250px",
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ccc"
-          }}
+          className="create-task-input create-task-description"
         />
         <select
           value={color}
           onChange={(e) => setColor(e.target.value)}
-          style={{
-            padding: "8px",
-            borderRadius: "4px",
-            border: "1px solid #ccc"
-          }}
+          className="create-task-select"
         >
           <option value="blue">Blue</option>
           <option value="green">Green</option>
           <option value="red">Red</option>
           <option value="yellow">Yellow</option>
         </select>
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <label style={{ marginRight: "5px" }}>
+        <div className="create-task-checkbox">
+          <label>
             <input
               type="checkbox"
               checked={isPrivate}
@@ -122,54 +140,18 @@ function CreateTaskForm({ refreshTasks, currentUser }) {
             Private Task
           </label>
         </div>
-        <div style={{ flex: "1 1 200px" }}>
+        <div className="co-owner-picklist">
           <Select
             isMulti
             name="coOwners"
-            options={options}
+            options={allUsernames.map((uname) => ({ value: uname, label: uname }))}
             value={selectedCoOwners}
             onChange={setSelectedCoOwners}
             placeholder="Select Co-Owners..."
-            styles={{
-              control: (provided, state) => ({
-                ...provided,
-                minHeight: "38px",
-                borderRadius: "4px",
-                borderColor: state.isFocused ? "#2684FF" : provided.borderColor,
-                boxShadow: state.isFocused ? "0 0 0 1px #2684FF" : provided.boxShadow,
-              }),
-              multiValue: (provided) => ({
-                ...provided,
-                backgroundColor: "#e0e0e0",
-              }),
-              multiValueLabel: (provided) => ({
-                ...provided,
-                color: "#333",
-              }),
-              multiValueRemove: (provided) => ({
-                ...provided,
-                color: "#333",
-                ":hover": {
-                  backgroundColor: "#ccc",
-                  color: "#222",
-                },
-              }),
-            }}
+            styles={customSelectStyles}
           />
         </div>
-        <button 
-          type="submit" 
-          style={{
-            padding: "8px 16px",
-            borderRadius: "4px",
-            background: "#2684FF",
-            color: "#fff",
-            border: "none",
-            cursor: "pointer"
-          }}
-        >
-          Add Task
-        </button>
+        <button type="submit" className="btn">Add Task</button>
       </form>
     </div>
   );

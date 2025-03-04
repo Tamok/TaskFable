@@ -1,3 +1,4 @@
+// frontend/src/components/Card.js
 import React, { useState } from "react";
 import axios from "axios";
 import CONFIG from "../config";
@@ -11,6 +12,7 @@ function Card({ task, refreshTasks, user }) {
   const [editingCommentText, setEditingCommentText] = useState("");
   const [showHistory, setShowHistory] = useState(false);
 
+  // Determine which statuses are allowed next
   let availableStatuses = [];
   if (task.status === "To-Do") {
     availableStatuses = ["Doing"];
@@ -20,16 +22,17 @@ function Card({ task, refreshTasks, user }) {
     availableStatuses = ["Doing", "Done"];
   }
 
-  const isOwner = task.owner_username === user.username;
+  const isOwner = (task.owner_username === user.username);
   const canAct = !task.locked || isOwner;
 
+  // Change task status with optional confirmations
   const handleStatusChange = async (newStatus) => {
     if (task.status === "To-Do" && newStatus === "Doing" && !user.skip_confirm_begin) {
       const confirmed = window.confirm("Once you begin your adventure, there is no turning back. Proceed?");
       if (!confirmed) return;
     }
     if (newStatus === "Done" && !user.skip_confirm_end) {
-      const confirmed = window.confirm("Ending your adventure will conclude your journey. Are you sure you want to finish?");
+      const confirmed = window.confirm("Ending your adventure will conclude your journey. Are you sure?");
       if (!confirmed) return;
     }
     try {
@@ -44,6 +47,7 @@ function Card({ task, refreshTasks, user }) {
     }
   };
 
+  // Add a new comment
   const handleAddComment = async () => {
     if (!commentText) return;
     try {
@@ -60,6 +64,7 @@ function Card({ task, refreshTasks, user }) {
     }
   };
 
+  // Edit task description
   const handleEditDescription = async () => {
     try {
       await axios.put(`${CONFIG.BACKEND_URL}/tasks/${task.id}/edit?username=${user.username}`, {
@@ -73,6 +78,7 @@ function Card({ task, refreshTasks, user }) {
     }
   };
 
+  // Edit an existing comment
   const handleEditComment = async (commentId) => {
     try {
       await axios.put(`${CONFIG.BACKEND_URL}/tasks/comment/edit`, {
@@ -89,10 +95,8 @@ function Card({ task, refreshTasks, user }) {
       console.error("Error editing comment:", error);
     }
   };
-  
-  
 
-  // For private tasks, non-owners see "Solo Adventure" as title, but still see owner info.
+  // If task is private and viewer is not the owner, show a simplified card
   if (task.is_private && !isOwner) {
     return (
       <div className={`card ${task.color}`}>
@@ -105,66 +109,120 @@ function Card({ task, refreshTasks, user }) {
     );
   }
 
-  const filteredHistory = showHistory ? task.history : task.history.filter(h => h.status === "Created" || h.status === "Done");
+  // Filter out only "Created" and "Done" from the history unless showHistory is toggled
+  const filteredHistory = showHistory
+    ? task.history
+    : task.history.filter(h => h.status === "Created" || h.status === "Done");
 
   return (
-    <div className={`card ${task.color}`} style={{ position: "relative" }}>
+    <div className={`card ${task.color}`}>
       <h3>
         {task.title}{" "}
         {task.is_private && <span title="Private Task" style={{ marginLeft: "5px" }}>🙈</span>}
         {task.locked && <span title="Locked Task" style={{ marginLeft: "5px" }}>🔒</span>}
         <br />
-        <small>Owner: {task.owner_username}{task.co_owners && task.co_owners.length > 0 && ` | Co-owners: ${task.co_owners.join(", ")}`}</small>
+        <small>
+          Owner: {task.owner_username}
+          {task.co_owners && task.co_owners.length > 0 && ` | Co-owners: ${task.co_owners.join(", ")}`}
+        </small>
       </h3>
-      <div className="description" style={{ position: "relative", paddingRight: "30px", whiteSpace: "normal", wordWrap: "break-word" }}>
+
+      {/* DESCRIPTION BLOCK */}
+      <div className="description">
         {isEditingDescription ? (
           <>
-            <textarea value={newDescription} onChange={(e) => setNewDescription(e.target.value)} />
-            <button onClick={handleEditDescription}>Save</button>
-            <button onClick={() => setIsEditingDescription(false)}>Cancel</button>
+            <textarea
+              value={newDescription}
+              onChange={(e) => setNewDescription(e.target.value)}
+              className="input-edit"
+            />
+            <button onClick={handleEditDescription} className="btn">Save</button>
+            <button onClick={() => setIsEditingDescription(false)} className="btn">Cancel</button>
           </>
         ) : (
           <>
             <p>{task.description}</p>
+            {/* Tiny pencil icon for editing, if user is the owner and task is not Done */}
             {isOwner && task.status !== "Done" && (
-              <button className="edit-button" onClick={() => setIsEditingDescription(true)} title="Edit description">✎</button>
+              <button
+                className="edit-icon"
+                onClick={() => setIsEditingDescription(true)}
+                title="Edit description"
+              >
+                ✏
+              </button>
             )}
           </>
         )}
       </div>
+
+      {/* STATUS CHANGE BUTTONS */}
       <div className="card-actions">
         {availableStatuses.map((status) => (
-          <button key={status} onClick={() => canAct && handleStatusChange(status)} disabled={!canAct}>
+          <button
+            key={status}
+            onClick={() => canAct && handleStatusChange(status)}
+            disabled={!canAct}
+            className="btn"
+          >
             {status}
           </button>
         ))}
       </div>
+
+      {/* COMMENTS */}
       <div className="comments">
         <h4>Comments</h4>
         {task.comments && task.comments.map((comment) => (
-          <div key={comment.id} className="comment" style={{ display: "flex", alignItems: "center" }}>
+          <div key={comment.id} className="comment">
             {comment.owner_username === user.username && (
-              <button className="edit-button" onClick={() => { setEditingCommentId(comment.id); setEditingCommentText(comment.content); }} title="Edit comment">✎</button>
+              <button
+                className="edit-icon"
+                onClick={() => {
+                  setEditingCommentId(comment.id);
+                  setEditingCommentText(comment.content);
+                }}
+                title="Edit comment"
+              >
+                ✏
+              </button>
             )}
-            <strong style={{ marginRight: "5px" }}>{comment.owner_username}:</strong>
+            <strong className="comment-author">{comment.owner_username}:</strong>
             {editingCommentId === comment.id ? (
               <>
-                <input type="text" value={editingCommentText} onChange={(e) => setEditingCommentText(e.target.value)} />
-                <button onClick={() => handleEditComment(comment.id)}>Save</button>
-                <button onClick={() => setEditingCommentId(null)}>Cancel</button>
+                <input
+                  type="text"
+                  value={editingCommentText}
+                  onChange={(e) => setEditingCommentText(e.target.value)}
+                  className="input-comment-edit"
+                />
+                <button onClick={() => handleEditComment(comment.id)} className="btn">Save</button>
+                <button onClick={() => setEditingCommentId(null)} className="btn">Cancel</button>
               </>
             ) : (
-              <span>{comment.content}</span>
+              <span className="comment-text">{comment.content}</span>
             )}
           </div>
         ))}
-        <input type="text" placeholder="Add a comment..." value={commentText} onChange={(e) => setCommentText(e.target.value)} />
-        <button onClick={handleAddComment}>Add Comment</button>
+        <input
+          type="text"
+          placeholder="Add a comment..."
+          value={commentText}
+          onChange={(e) => setCommentText(e.target.value)}
+          className="input-comment"
+        />
+        <button onClick={handleAddComment} className="btn">Add Comment</button>
       </div>
+
+      {/* HISTORY */}
       <div className="history">
         <h4>
           History
-          <button onClick={() => setShowHistory(!showHistory)} style={{ marginLeft: "5px", fontSize: "0.8em", cursor: "pointer" }} title="Toggle full history">
+          <button
+            onClick={() => setShowHistory(!showHistory)}
+            className="btn"
+            title="Toggle full history"
+          >
             {showHistory ? "−" : "+"}
           </button>
         </h4>

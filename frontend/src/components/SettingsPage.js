@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from "react";
+// frontend/src/components/SettingsPage.js
+import React, { useState } from "react";
 import axios from "axios";
 import CONFIG from "../config";
 import { logFrontendEvent } from "../utils/logger";
 import moment from "moment-timezone";
 
-// Use moment-timezone to get a complete list of timezones
+// Get complete list of IANA timezones using moment-timezone
 const TIMEZONES = moment.tz.names();
 
 function SettingsPage({ currentUser, refreshUser }) {
@@ -15,6 +16,7 @@ function SettingsPage({ currentUser, refreshUser }) {
   const [darkMode, setDarkMode] = useState(currentUser.dark_mode);
   const [devCollapsed, setDevCollapsed] = useState(true);
 
+  // Toggle "begin adventure" confirmation setting
   const handleToggleBegin = async () => {
     try {
       const newSetting = !skipConfirmBegin;
@@ -29,6 +31,7 @@ function SettingsPage({ currentUser, refreshUser }) {
     }
   };
 
+  // Toggle "end adventure" confirmation setting
   const handleToggleEnd = async () => {
     try {
       const newSetting = !skipConfirmEnd;
@@ -43,6 +46,7 @@ function SettingsPage({ currentUser, refreshUser }) {
     }
   };
 
+  // Handle timezone change
   const handleTimezoneChange = async (e) => {
     const newTimezone = e.target.value;
     try {
@@ -57,6 +61,7 @@ function SettingsPage({ currentUser, refreshUser }) {
     }
   };
 
+  // Toggle tooltips setting
   const handleToggleTooltips = async () => {
     try {
       const newSetting = !showTooltips;
@@ -71,6 +76,7 @@ function SettingsPage({ currentUser, refreshUser }) {
     }
   };
 
+  // Toggle dark mode setting
   const handleToggleDarkMode = async () => {
     try {
       const newSetting = !darkMode;
@@ -85,6 +91,7 @@ function SettingsPage({ currentUser, refreshUser }) {
     }
   };
 
+  // Handle purging all tasks (developer section)
   const handlePurgeTasks = async () => {
     if (!window.confirm("Are you sure you want to purge all tasks? This cannot be undone.")) return;
     try {
@@ -96,6 +103,7 @@ function SettingsPage({ currentUser, refreshUser }) {
     }
   };
 
+  // Handle deletion of all To-Do tasks (developer section)
   const handleDeleteTodo = async () => {
     if (!window.confirm("Are you sure you want to delete all To-Do tasks?")) return;
     try {
@@ -145,11 +153,11 @@ function SettingsPage({ currentUser, refreshUser }) {
         </label>
       </div>
       <div className="dev-section">
-        <h3 onClick={() => setDevCollapsed(!devCollapsed)} style={{ cursor: "pointer" }}>
+        <h3 onClick={() => setDevCollapsed(!devCollapsed)} className="dev-header">
           {devCollapsed ? "▶" : "▼"} Dev Section
         </h3>
         {!devCollapsed && (
-          <div>
+          <div className="dev-actions">
             <button onClick={handlePurgeTasks}>Purge All Tasks</button>
             <button onClick={handleDeleteTodo}>Delete All To-Do Tasks</button>
           </div>

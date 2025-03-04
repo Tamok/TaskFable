@@ -1,3 +1,4 @@
+// frontend/src/components/LogsPage.js
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import CONFIG from "../config";
@@ -41,7 +42,7 @@ function LogsPage() {
         <ul>
           {backendLogs.map((file) => (
             <li key={file}>
-              <button onClick={() => handleSelectLog("backend", file)}>{file}</button>
+              <button onClick={() => handleSelectLog("backend", file)} className="btn">{file}</button>
             </li>
           ))}
         </ul>
@@ -51,7 +52,7 @@ function LogsPage() {
         <ul>
           {frontendLogs.map((file) => (
             <li key={file}>
-              <button onClick={() => handleSelectLog("frontend", file)}>{file}</button>
+              <button onClick={() => handleSelectLog("frontend", file)} className="btn">{file}</button>
             </li>
           ))}
         </ul>
@@ -59,7 +60,7 @@ function LogsPage() {
       {selectedLog && (
         <div>
           <h3>{selectedLog}</h3>
-          <pre style={{ background: "#f0f0f0", padding: "10px" }}>{logContent}</pre>
+          <pre className="log-content">{logContent}</pre>
         </div>
       )}
     </div>

@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.2.2] - 2025-03-01
+### Improved
+- Converted edit icons for descriptions/comments into small pencil icons.
+- Adjusted dark mode React-Select styling to reduce overly bright text in the co-owner picklist.
+- Used a darker red color for buttons in dark mode (instead of bright blue).
+- Tweaked button spacing/padding to avoid oversized or crammed appearance.
+- Constrained the comment field within the card width to prevent overflow.
+
 ## [0.2.1] - 2025-02-28
 ### Fixed
 - Reordered endpoints to resolve routing conflicts between `/tasks/comment/edit` and dynamic `/tasks/{task_id}/edit`.
