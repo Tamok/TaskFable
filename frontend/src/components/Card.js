@@ -4,6 +4,7 @@ import axios from "axios";
 import CONFIG from "../config";
 import { logFrontendEvent } from "../utils/logger";
 import moment from "moment-timezone";
+import { formatTimestamp } from "../utils/time";  
 
 function Card({ task, refreshTasks, user }) {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
@@ -214,7 +215,7 @@ function Card({ task, refreshTasks, user }) {
         {filteredHistory.map((entry, idx) => (
           <div key={idx} className="history-entry">
             <span>
-              {entry.status} at {moment.utc(entry.timestamp).tz(user.timezone).format("YYYY-MM-DD HH:mm:ss")}
+              {entry.status} at {formatTimestamp(entry.timestamp, user.timezone)}
             </span>
           </div>
         ))}

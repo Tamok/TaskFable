@@ -1,18 +1,15 @@
 // frontend/src/components/Feed.js
 import React from "react";
-import moment from "moment-timezone";
+import { formatTimestamp } from "../utils/time";
 
 function Feed({ stories, user }) {
   return (
     <div className="feed">
       <h2>Task Stories Feed</h2>
       {stories.map((story) => {
-        const rawTimestamp = story.created_at;
-        const formatted = moment.utc(rawTimestamp)
-          .tz(user.timezone)
-          .format("YYYY-MM-DD HH:mm:ss");
+        const formatted = formatTimestamp(story.created_at, user.timezone);
         console.log(
-          `Story ${story.id}: raw timestamp=${rawTimestamp}, formatted with timezone ${user.timezone}=${formatted}`
+          `Story ${story.id}: raw timestamp=${story.created_at}, formatted with timezone ${user.timezone}=${formatted}`
         );
         return (
           <div key={story.id} className="story">
