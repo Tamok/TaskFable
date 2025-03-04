@@ -11,6 +11,7 @@ body.dark {
   color: #eee;
 }
 
+/* Dark mode for inputs, textareas, selects */
 body.dark input[type="text"],
 body.dark input[type="password"],
 body.dark input[type="email"],
@@ -23,6 +24,29 @@ body.dark select {
 
 body.dark input[type="checkbox"] {
   accent-color: #c0392b;
+}
+
+/* Custom dark mode checkbox styling */
+body.dark input[type="checkbox"] {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  width: 16px;
+  height: 16px;
+  border: 1px solid #555;
+  background-color: #333;
+  position: relative;
+}
+body.dark input[type="checkbox"]:checked::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 0px;
+  width: 4px;
+  height: 8px;
+  border: solid #c0392b;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }
 
 
@@ -332,6 +356,8 @@ body.dark .log-content {
 
 .settings label {
   cursor: pointer;
+  display: block;
+  margin-bottom: 5px;
 }
 
 /* Timezone picklist narrower in Settings */
@@ -339,7 +365,6 @@ body.dark .log-content {
   max-width: 250px;
   display: inline-block;
   vertical-align: middle;
-  margin-left: 10px;
 }
 
 .dev-section {

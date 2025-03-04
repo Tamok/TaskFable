@@ -5,6 +5,11 @@ import CONFIG from "../config";
 import { logFrontendEvent } from "../utils/logger";
 import Select from "react-select";
 
+/**
+ * Custom react-select styles for the timezone dropdown.
+ * Ensures one-line height, auto width (to match longest option),
+ * and dark mode colors that match the co-owner picklist.
+ */
 const createSelectStyles = (isDarkMode) => ({
   control: (provided) => ({
     ...provided,
@@ -18,16 +23,21 @@ const createSelectStyles = (isDarkMode) => ({
   }),
   menu: (provided) => ({
     ...provided,
-    minWidth: "200px",
-    fontSize: "0.9em"
+    backgroundColor: isDarkMode ? "#333" : "#fff",
+    border: isDarkMode ? "1px solid #555" : "1px solid #ccc",
+    fontSize: "0.9em",
+  }),
+  menuList: (provided) => ({
+    ...provided,
+    backgroundColor: isDarkMode ? "#333" : "#fff",
   }),
   placeholder: (provided) => ({
     ...provided,
-    color: isDarkMode ? "#aaa" : "#666"
+    color: isDarkMode ? "#aaa" : "#666",
   }),
   singleValue: (provided) => ({
     ...provided,
-    color: isDarkMode ? "#eee" : "#333"
+    color: isDarkMode ? "#eee" : "#333",
   }),
   option: (provided, state) => ({
     ...provided,
@@ -36,8 +46,8 @@ const createSelectStyles = (isDarkMode) => ({
       : state.isFocused
         ? (isDarkMode ? "#555" : "#eee")
         : (isDarkMode ? "#333" : "#fff"),
-    color: isDarkMode ? "#fff" : "#000"
-  })
+    color: isDarkMode ? "#fff" : "#000",
+  }),
 });
 
 function SettingsPage({ currentUser, refreshUser, addNotification }) {
@@ -166,19 +176,17 @@ function SettingsPage({ currentUser, refreshUser, addNotification }) {
         </label>
       </div>
       <div>
-        <label title="Select your timezone.">
-          Timezone:
-          <div className="timezone-picker">
-            <Select
-              value={timezone}
-              onChange={handleTimezoneChange}
-              options={CONFIG.TIMEZONES}
-              styles={createSelectStyles(darkMode)}
-              isSearchable={false}
-              menuPlacement="auto"
-            />
-          </div>
-        </label>
+        <label title="Select your timezone.">Timezone:</label>
+        <div className="timezone-picker">
+          <Select
+            value={timezone}
+            onChange={handleTimezoneChange}
+            options={CONFIG.TIMEZONES}
+            styles={createSelectStyles(darkMode)}
+            isSearchable={false}
+            menuPlacement="auto"
+          />
+        </div>
       </div>
       <div>
         <label title="Toggle tooltips on or off.">

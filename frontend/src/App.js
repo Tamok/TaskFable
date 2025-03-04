@@ -68,7 +68,7 @@ function App() {
     }
   };
 
-  // Refresh tasks/stories when user changes
+  // Refresh tasks/stories when user changes or timezone changes
   useEffect(() => {
     if (user) {
       fetchTasks();
@@ -80,6 +80,14 @@ function App() {
       return () => clearInterval(interval);
     }
   }, [user]);
+
+  // Additionally, re-fetch stories whenever the user's timezone changes
+  useEffect(() => {
+    if (user) {
+      fetchStories();
+      fetchTasks();
+    }
+  }, [user?.timezone]);
 
   // Handle login and persist user
   const handleUserLogin = (userData) => {
@@ -139,7 +147,7 @@ function App() {
             <Board tasks={tasks} refreshTasks={fetchTasks} user={user} />
           </div>
           <div className="feed-container">
-            <Feed stories={stories} user={user} />
+              <Feed key={user.timezone} stories={stories} user={user} />
           </div>
         </div>
       )}
