@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.2.3] - 2025-03-05
+## [0.2.3] - 2025-03-05
 ### Added
 - Added a `/server/timezone` endpoint to return the server’s local UTC offset.
 - If a user has no timezone set, the app now automatically fetches and stores the server’s timezone.
