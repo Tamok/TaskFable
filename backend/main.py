@@ -3,7 +3,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from routers import tasks, stories, users, logs
+from routers import tasks, stories, users, logs, changelog
 import logging_config
 
 from datetime import datetime
@@ -34,6 +34,7 @@ app.include_router(users.router, prefix="/users")
 app.include_router(tasks.router, prefix="/tasks")
 app.include_router(stories.router, prefix="/stories")
 app.include_router(logs.router, prefix="/logs")
+app.include_router(changelog.router, prefix="/other")
 
 @app.on_event("startup")
 def startup_event():

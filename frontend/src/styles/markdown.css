@@ -1,0 +1,99 @@
+/* markdown.css - Styling for rendered markdown content in both light and dark modes */
+
+.changelog-content {
+    font-family: 'Roboto', sans-serif;
+    line-height: 1.6;
+    color: #333;
+    padding: 15px;
+    background: #fafafa;
+    border-radius: 4px;
+  }
+  
+  /* Dark mode overrides for the markdown container */
+  body.dark .changelog-content {
+    color: #eee;
+    background: #1e1e1e;
+    border: 1px solid #333;
+  }
+  
+  /* Headings */
+  .changelog-content h1,
+  .changelog-content h2,
+  .changelog-content h3,
+  .changelog-content h4,
+  .changelog-content h5,
+  .changelog-content h6 {
+    margin-top: 1.2em;
+    margin-bottom: 0.6em;
+    font-weight: 700;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 0.3em;
+  }
+  
+  /* Dark mode heading adjustments */
+  body.dark .changelog-content h1,
+  body.dark .changelog-content h2,
+  body.dark .changelog-content h3,
+  body.dark .changelog-content h4,
+  body.dark .changelog-content h5,
+  body.dark .changelog-content h6 {
+    border-bottom-color: #555;
+  }
+  
+  /* Paragraphs */
+  .changelog-content p {
+    margin-bottom: 1em;
+  }
+  
+  /* Lists */
+  .changelog-content ul,
+  .changelog-content ol {
+    padding-left: 1.5em;
+    margin-bottom: 1em;
+  }
+  
+  /* Inline code */
+  .changelog-content code {
+    background-color: #f5f5f5;
+    padding: 2px 4px;
+    border-radius: 4px;
+    font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+  }
+  
+  /* Dark mode inline code */
+  body.dark .changelog-content code {
+    background-color: #333;
+    color: #eee;
+  }
+  
+  /* Code blocks */
+  .changelog-content pre {
+    background-color: #f5f5f5;
+    padding: 10px;
+    overflow-x: auto;
+    border-radius: 4px;
+    margin-bottom: 1em;
+  }
+  
+  /* Dark mode for code blocks */
+  body.dark .changelog-content pre {
+    background-color: #2d2d2d;
+    color: #eee;
+    border: 1px solid #444;
+  }
+  
+  /* Blockquotes */
+  .changelog-content blockquote {
+    border-left: 4px solid #ddd;
+    padding-left: 1em;
+    color: #666;
+    margin: 1em 0;
+    font-style: italic;
+  }
+  
+  /* Dark mode for blockquotes */
+  body.dark .changelog-content blockquote {
+    border-left-color: #555;
+    color: #ccc;
+  }
+  

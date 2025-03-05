@@ -6,10 +6,11 @@ import Feed from "./components/Feed";
 import CreateTaskForm from "./components/CreateTaskForm";
 import SettingsPage from "./components/SettingsPage";
 import LogsPage from "./components/LogsPage";
+import ChangelogPage from "./components/ChangelogPage"; // New component for the changelog page
 import Login from "./components/Login";
 import Notifications from "./components/Notifications";
 import CONFIG from "./config";
-import "./styles.css";
+import "./styles/index.css"; // Main aggregated stylesheet
 
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -110,7 +111,7 @@ function App() {
     }
   };
 
-  // Toggle dark mode on body element
+  // Toggle dark mode on body element based on user preference
   useEffect(() => {
     if (user && user.dark_mode) {
       document.body.classList.add("dark");
@@ -127,14 +128,18 @@ function App() {
     <div className="App">
       <Notifications notifications={notifications} removeNotification={removeNotification} />
       <header className="app-header">
-        <h1>Gamified Task Portal</h1>
+        <h1 className="header-title">
+          TaskFable <span className="version">v{CONFIG.VERSION}</span>
+        </h1>
         <p className="welcome-text">Welcome, {user.username}</p>
         <nav className="main-nav">
           <button onClick={() => setActiveTab("dashboard")} className="btn">Dashboard</button>
           <button onClick={() => setActiveTab("settings")} className="btn">Settings</button>
           <button onClick={() => setActiveTab("logs")} className="btn">Logs</button>
+          <button onClick={() => setActiveTab("changelog")} className="btn">Changelog</button>
         </nav>
       </header>
+
       {activeTab === "dashboard" && (
         <div className="dashboard">
           <div className="board-container">
@@ -147,7 +152,7 @@ function App() {
             <Board tasks={tasks} refreshTasks={fetchTasks} user={user} />
           </div>
           <div className="feed-container">
-              <Feed key={user.timezone} stories={stories} user={user} />
+            <Feed key={user.timezone} stories={stories} user={user} />
           </div>
         </div>
       )}
@@ -163,6 +168,11 @@ function App() {
       {activeTab === "logs" && (
         <div className="page-container">
           <LogsPage />
+        </div>
+      )}
+      {activeTab === "changelog" && (
+        <div className="page-container">
+          <ChangelogPage />
         </div>
       )}
     </div>

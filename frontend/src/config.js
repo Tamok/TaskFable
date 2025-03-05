@@ -1,8 +1,8 @@
 // frontend/src/config.js
 const CONFIG = {
   BACKEND_URL: "http://localhost:8000",
-  POLL_INTERVAL: 5000, // milliseconds
-  // Trimmed list of major UTC timezones with location names
+  POLL_INTERVAL: 5000, // ms
+  VERSION: "0.2.3",
   TIMEZONES: [
     { value: "UTC-12:00", label: "UTC-12:00 (International Date Line West)" },
     { value: "UTC-11:00", label: "UTC-11:00 (Niue, American Samoa)" },

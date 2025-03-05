@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.2.4] - 2025-03-06
+### Added
+- **Changelog Page Enhancements:** The Changelog page now renders markdown using `react-markdown`, and a new backend endpoint (`/other/changelog`) serves the raw changelog file.
+- **Dark Mode Markdown Styling:** Added dark mode overrides in the markdown styling (in markdown.css) so that headings, paragraphs, inline code, code blocks, and blockquotes display appropriately on dark backgrounds.
+
+### Fixed
+- **Spacing & Typography:** Resolved spacing issues in the Story Feed and improved typography using a refined font (Roboto) with adjusted font sizes, weights, and margins.
+  
+### Improved
+- **Header Redesign:** Updated the header to display “TaskFable” with a fancy gradient background and the current version (from config.js) in smaller text.
+- **CSS Modularization:** Refactored a large stylesheet into multiple files (base.css, layout.css, components.css, themes.css, notifications.css, markdown.css) for better maintainability and theming.
+
 ## [0.2.3] - 2025-03-05
 ### Added
 - Added a `/server/timezone` endpoint to return the server’s local UTC offset.

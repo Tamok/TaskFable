@@ -1,0 +1,73 @@
+/* layout.css - Layout containers, header, navigation, and responsive grid */
+
+/* Header & Navigation */
+.app-header {
+    /* A fancy gradient background */
+    background: linear-gradient(135deg, #FF7E5F 0%, #FD3A84 100%);
+    color: #fff;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+  
+  /* Title & version styling */
+  .header-title {
+    font-size: 2.2rem;
+    font-family: 'Roboto', sans-serif; /* or any other fancy font */
+    font-weight: 700;
+    margin: 0;
+    display: inline-block;
+  }
+  .header-title .version {
+    font-size: 0.5em;   /* Make the version smaller */
+    margin-left: 10px;
+    color: #fce4ec;     /* A lighter pinkish color that stands out on the gradient */
+    font-weight: 400;   /* Normal weight so it doesn’t compete with the main title */
+  }
+  
+  .welcome-text {
+    margin: 5px 0;
+  }
+  
+  .main-nav button {
+    margin-right: 10px;
+  }
+  
+  /* Dashboard Layout */
+  .dashboard {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  
+  .board-container {
+    flex: 2;
+    min-width: 300px;
+    padding: 10px;
+  }
+  
+  .feed-container {
+    flex: 1;
+    min-width: 250px;
+    padding: 10px;
+    background: #f9f9f9;
+    overflow-y: auto;
+    max-height: calc(100vh - 150px);
+  }
+  
+  /* Page container for Settings, Logs, etc. */
+  .page-container {
+    padding: 20px;
+  }
+  
+  /* Media Queries */
+  @media (max-width: 768px) {
+    .dashboard {
+      flex-direction: column;
+    }
+    .board-container,
+    .feed-container {
+      min-width: 100%;
+    }
+  }
+  
