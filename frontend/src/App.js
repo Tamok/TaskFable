@@ -133,10 +133,10 @@ function App() {
         </h1>
         <p className="welcome-text">Welcome, {user.username}</p>
         <nav className="main-nav">
-          <button onClick={() => setActiveTab("dashboard")} className="btn">Dashboard</button>
-          <button onClick={() => setActiveTab("settings")} className="btn">Settings</button>
-          <button onClick={() => setActiveTab("logs")} className="btn">Logs</button>
-          <button onClick={() => setActiveTab("changelog")} className="btn">Changelog</button>
+          <button title="Dashboard: View your tasks and story feed" onClick={() => setActiveTab("dashboard")} className="btn">Dashboard</button>
+          <button title="Settings: Update your account preferences" onClick={() => setActiveTab("settings")} className="btn">Settings</button>
+          <button title="Logs: View backend and frontend logs" onClick={() => setActiveTab("logs")} className="btn">Logs</button>
+          <button title="Changelog: Read the latest updates" onClick={() => setActiveTab("changelog")} className="btn">Changelog</button>
         </nav>
       </header>
 

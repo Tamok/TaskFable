@@ -10,6 +10,7 @@ function CreateTaskForm({ refreshTasks, currentUser, isDarkMode, addNotification
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("blue");
   const [isPrivate, setIsPrivate] = useState(false);
+  const [isLocked, setIsLocked] = useState(false);
   const [selectedCoOwners, setSelectedCoOwners] = useState([]);
   const [allUsernames, setAllUsernames] = useState([]);
 
@@ -82,6 +83,7 @@ function CreateTaskForm({ refreshTasks, currentUser, isDarkMode, addNotification
         description,
         color,
         is_private: isPrivate,
+        locked: isLocked,
         owner_username: currentUser.username,
         co_owners: coOwnersStr
       };
@@ -104,13 +106,14 @@ function CreateTaskForm({ refreshTasks, currentUser, isDarkMode, addNotification
     <div className="create-task-form">
       <h2>Create a New Task</h2>
       <form onSubmit={handleSubmit}>
-        <input
+              <input
           type="text"
           placeholder="Title"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           required
           className="create-task-input create-task-title"
+          title="Enter the task title"
         />
         <input
           type="text"
@@ -118,11 +121,13 @@ function CreateTaskForm({ refreshTasks, currentUser, isDarkMode, addNotification
           value={description}
           onChange={(e) => setDescription(e.target.value)}
           className="create-task-input create-task-description"
+          title="Enter a brief description of the task"
         />
         <select
           value={color}
           onChange={(e) => setColor(e.target.value)}
           className="create-task-select"
+          title="Select a color for the task card"
         >
           <option value="blue">Blue</option>
           <option value="green">Green</option>
@@ -130,7 +135,7 @@ function CreateTaskForm({ refreshTasks, currentUser, isDarkMode, addNotification
           <option value="yellow">Yellow</option>
         </select>
         <div className="create-task-checkbox">
-          <label>
+          <label title="Mark this task as private so only you can see the details">
             <input
               type="checkbox"
               checked={isPrivate}
@@ -139,7 +144,17 @@ function CreateTaskForm({ refreshTasks, currentUser, isDarkMode, addNotification
             Private Task
           </label>
         </div>
-        <div className="co-owner-picklist">
+        <div className="create-task-checkbox">
+          <label title="Mark this task as locked so that only the owner can modify it">
+            <input
+              type="checkbox"
+              checked={isLocked}
+              onChange={(e) => setIsLocked(e.target.checked)}
+            />{" "}
+            Locked Task
+          </label>
+        </div>
+        <div className="co-owner-picklist" title="Select one or more co-owners for collaborative tasks">
           <Select
             isMulti
             name="coOwners"
@@ -150,7 +165,9 @@ function CreateTaskForm({ refreshTasks, currentUser, isDarkMode, addNotification
             styles={customSelectStyles}
           />
         </div>
-        <button type="submit" className="btn">Add Task</button>
+        <button type="submit" className="btn" title="Click to create a new task">
+          Add Task
+        </button>
       </form>
     </div>
   );

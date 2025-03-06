@@ -24,7 +24,9 @@ function Card({ task, refreshTasks, user }) {
   }
 
   const isOwner = task.owner_username === user.username;
-  const canAct = !task.locked || isOwner;
+  const isCoOwner = task.co_owners && task.co_owners.includes(user.username);
+  // A task is actionable if it's not locked or the user is the owner or a co-owner.
+  const canAct = !task.locked || isOwner || isCoOwner;
 
   const handleStatusChange = async (newStatus) => {
     if (task.status === "To-Do" && newStatus === "Doing" && !user.skip_confirm_begin) {
@@ -93,13 +95,14 @@ function Card({ task, refreshTasks, user }) {
     }
   };
 
+  // If the task is private and the user is not the owner, show a simplified card.
   if (task.is_private && !isOwner) {
     return (
       <div className={`card ${task.color}`}>
-        <h3>
-          Solo Adventure <span title="Private Task" style={{ marginLeft: "5px" }}>🙈</span>
+        <h3 title="Private Task - details hidden">
+          Solo Adventure <span title="This is a private task" style={{ marginLeft: "5px" }}>🙈</span>
           <br />
-          <small>Owner: {task.owner_username}</small>
+          <small title="Task owner">Owner: {task.owner_username}</small>
         </h3>
       </div>
     );
@@ -111,35 +114,36 @@ function Card({ task, refreshTasks, user }) {
 
   return (
     <div className={`card ${task.color}`}>
-      <h3>
+      <h3 title="Task title and status">
         {task.title}{" "}
-        {task.is_private && <span title="Private Task" style={{ marginLeft: "5px" }}>🙈</span>}
-        {task.locked && <span title="Locked Task" style={{ marginLeft: "5px" }}>🔒</span>}
+        {task.is_private && <span title="This is a private task" style={{ marginLeft: "5px" }}>🙈</span>}
+        {task.locked && <span title={isOwner || isCoOwner ? "Locked Task - you can modify it" : "Locked Task - only the owner/co-owners can modify"} style={{ marginLeft: "5px" }}>🔒</span>}
         <br />
-        <small>
+        <small title="Task owner and co-owners">
           Owner: {task.owner_username}
           {task.co_owners && task.co_owners.length > 0 && ` | Co-owners: ${task.co_owners.join(", ")}`}
         </small>
       </h3>
-      <div className="description">
+      <div className="description" title="Task description">
         {isEditingDescription ? (
           <>
             <textarea
               value={newDescription}
               onChange={(e) => setNewDescription(e.target.value)}
               className="input-edit"
+              title="Edit task description"
             />
-            <button onClick={handleEditDescription} className="btn">Save</button>
-            <button onClick={() => setIsEditingDescription(false)} className="btn">Cancel</button>
+            <button onClick={handleEditDescription} className="btn" title="Save new description">Save</button>
+            <button onClick={() => setIsEditingDescription(false)} className="btn" title="Cancel editing">Cancel</button>
           </>
         ) : (
           <>
             <p>{task.description}</p>
-            {isOwner && task.status !== "Done" && (
+            {(isOwner || isCoOwner) && task.status !== "Done" && (
               <button
                 className="edit-icon"
                 onClick={() => setIsEditingDescription(true)}
-                title="Edit description"
+                title="Edit task description (owners and co-owners can edit)"
               >
                 ✏
               </button>
@@ -147,19 +151,20 @@ function Card({ task, refreshTasks, user }) {
           </>
         )}
       </div>
-      <div className="card-actions">
-        {availableStatuses.map((status) => (
-          <button
-            key={status}
-            onClick={() => canAct && handleStatusChange(status)}
-            disabled={!canAct}
-            className="btn"
-          >
-            {status}
-          </button>
-        ))}
+      <div className="card-actions" title="Task actions">
+        {canAct &&
+          availableStatuses.map((status) => (
+            <button
+              key={status}
+              onClick={() => handleStatusChange(status)}
+              className="btn"
+              title={`Change status to ${status}`}
+            >
+              {status}
+            </button>
+          ))}
       </div>
-      <div className="comments">
+      <div className="comments" title="Task comments">
         <h4>Comments</h4>
         {task.comments && task.comments.map((comment) => (
           <div key={comment.id} className="comment">
@@ -170,12 +175,12 @@ function Card({ task, refreshTasks, user }) {
                   setEditingCommentId(comment.id);
                   setEditingCommentText(comment.content);
                 }}
-                title="Edit comment"
+                title="Edit your comment"
               >
                 ✏
               </button>
             )}
-            <strong className="comment-author">{comment.owner_username}:</strong>
+            <strong className="comment-author" title="Comment author">{comment.owner_username}:</strong>
             {editingCommentId === comment.id ? (
               <>
                 <input
@@ -183,12 +188,13 @@ function Card({ task, refreshTasks, user }) {
                   value={editingCommentText}
                   onChange={(e) => setEditingCommentText(e.target.value)}
                   className="input-comment-edit"
+                  title="Edit comment text"
                 />
-                <button onClick={() => handleEditComment(comment.id)} className="btn">Save</button>
-                <button onClick={() => setEditingCommentId(null)} className="btn">Cancel</button>
+                <button onClick={() => handleEditComment(comment.id)} className="btn" title="Save edited comment">Save</button>
+                <button onClick={() => setEditingCommentId(null)} className="btn" title="Cancel editing comment">Cancel</button>
               </>
             ) : (
-              <span className="comment-text">{comment.content}</span>
+              <span className="comment-text" title="Comment text">{comment.content}</span>
             )}
           </div>
         ))}
@@ -198,22 +204,23 @@ function Card({ task, refreshTasks, user }) {
           value={commentText}
           onChange={(e) => setCommentText(e.target.value)}
           className="input-comment"
+          title="Type a comment here"
         />
-        <button onClick={handleAddComment} className="btn">Add Comment</button>
+        <button onClick={handleAddComment} className="btn" title="Submit your comment">Add Comment</button>
       </div>
-      <div className="history">
+      <div className="history" title="Task history">
         <h4>
           History
           <button
             onClick={() => setShowHistory(!showHistory)}
             className="btn"
-            title="Toggle full history"
+            title="Toggle full history view"
           >
             {showHistory ? "−" : "+"}
           </button>
         </h4>
         {filteredHistory.map((entry, idx) => (
-          <div key={idx} className="history-entry">
+          <div key={idx} className="history-entry" title={`History entry: ${entry.status}`}>
             <span>
               {entry.status} at {formatTimestamp(entry.timestamp, user.timezone)}
             </span>

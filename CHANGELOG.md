@@ -1,5 +1,19 @@
 # Changelog
 
+## [0.2.5] - 2025-03-07
+### Added
+- **Dashboard Tooltips:** Added descriptive tooltips (using `title` attributes) to many dashboard elements, including:
+  - Navigation buttons in the main header.
+  - Task creation form inputs (title, description, color selector), checkboxes (Private Task and Locked Task), co-owner picklist, and the Add Task button.
+  - Action buttons, edit icons, comments, and history elements in task cards.
+  
+### Changed
+- **Card Action Buttons:** Modified the Card component so that action buttons are rendered only if the task is not locked or if the user is the owner or a co-owner.
+- **Task Editing:** Updated the task description edit functionality to allow both owners and co-owners to edit the task description (when the task is not marked as Done). The tooltips have been updated accordingly.
+
+### Fixed
+- Improved user experience by hiding action buttons for locked tasks from non-authorized users while allowing co-owners full access.
+
 ## [0.2.4] - 2025-03-06
 ### Added
 - **Changelog Page Enhancements:** The Changelog page now renders markdown using `react-markdown`, and a new backend endpoint (`/other/changelog`) serves the raw changelog file.

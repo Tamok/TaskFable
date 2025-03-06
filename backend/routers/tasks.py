@@ -25,6 +25,7 @@ class TaskCreate(BaseModel):
     scheduled_time: datetime = None
     repeat_interval: int = None
     is_private: bool = False
+    locked: bool = False           # <-- NEW: allow creating a locked task
     owner_username: str
     co_owners: str = ""  # Comma-separated usernames
 
@@ -151,10 +152,12 @@ def create_task(task_data: TaskCreate, db: Session = Depends(get_db)):
         scheduled_time=task_data.scheduled_time,
         repeat_interval=task_data.repeat_interval,
         is_private=task_data.is_private,
+        locked=task_data.locked,       # <-- NEW: set locked value from request
         owner_id=user.id,
         status=TaskStatus.todo,
         co_owner_ids=co_owner_ids_str
     )
+
     db.add(task)
     db.commit()
     db.refresh(task)
