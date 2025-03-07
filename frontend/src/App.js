@@ -1,5 +1,5 @@
 // frontend/src/App.js
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 import Board from "./components/Board";
 import Feed from "./components/Feed";
@@ -10,7 +10,7 @@ import ChangelogPage from "./components/ChangelogPage"; // New component for the
 import Login from "./components/Login";
 import Notifications from "./components/Notifications";
 import CONFIG from "./config";
-import "./styles/index.css"; // Main aggregated stylesheet
+import "./styles/index.css";
 
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -49,27 +49,33 @@ function App() {
     initUserTimezone();
   }, [user]);
 
-  // Fetch tasks and stories from backend
-  const fetchTasks = async () => {
+  // Wrap fetchTasks so it only changes when 'user' changes.
+  const fetchTasks = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await axios.get(`${CONFIG.BACKEND_URL}/tasks?viewer_username=${user.username}`);
+      const res = await axios.get(
+        `${CONFIG.BACKEND_URL}/tasks?viewer_username=${user.username}`
+      );
       setTasks(res.data);
     } catch (error) {
       console.error("Error fetching tasks:", error);
     }
-  };
-  const fetchStories = async () => {
+  }, [user]);
+
+  // Wrap fetchStories so it only changes when 'user' changes.
+  const fetchStories = useCallback(async () => {
     if (!user) return;
     try {
-      const res = await axios.get(`${CONFIG.BACKEND_URL}/stories?viewer_username=${user.username}`);
+      const res = await axios.get(
+        `${CONFIG.BACKEND_URL}/stories?viewer_username=${user.username}`
+      );
       setStories(res.data);
     } catch (error) {
       console.error("Error fetching stories:", error);
     }
-  };
+  }, [user]);
 
-  // Refresh tasks/stories when user changes or timezone changes
+  // Combined effect: fetch immediately and set up polling when user or user's timezone changes.
   useEffect(() => {
     if (user) {
       fetchTasks();
@@ -80,23 +86,15 @@ function App() {
       }, CONFIG.POLL_INTERVAL);
       return () => clearInterval(interval);
     }
-  }, [user]);
+  }, [user, user?.timezone, fetchTasks, fetchStories]);
 
-  // Additionally, re-fetch stories whenever the user's timezone changes
-  useEffect(() => {
-    if (user) {
-      fetchStories();
-      fetchTasks();
-    }
-  }, [user?.timezone]);
-
-  // Handle login and persist user
+  // Handle login and persist user.
   const handleUserLogin = (userData) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
   };
 
-  // Refresh user details and re-fetch tasks/stories so timestamps update
+  // Refresh user details and re-fetch tasks/stories.
   const refreshUser = async () => {
     if (!user) return;
     try {
@@ -111,7 +109,7 @@ function App() {
     }
   };
 
-  // Toggle dark mode on body element based on user preference
+  // Toggle dark mode on the body element based on user preference.
   useEffect(() => {
     if (user && user.dark_mode) {
       document.body.classList.add("dark");
@@ -133,10 +131,34 @@ function App() {
         </h1>
         <p className="welcome-text">Welcome, {user.username}</p>
         <nav className="main-nav">
-          <button title="Dashboard: View your tasks and story feed" onClick={() => setActiveTab("dashboard")} className="btn">Dashboard</button>
-          <button title="Settings: Update your account preferences" onClick={() => setActiveTab("settings")} className="btn">Settings</button>
-          <button title="Logs: View backend and frontend logs" onClick={() => setActiveTab("logs")} className="btn">Logs</button>
-          <button title="Changelog: Read the latest updates" onClick={() => setActiveTab("changelog")} className="btn">Changelog</button>
+          <button
+            title="Dashboard: View your tasks and story feed"
+            onClick={() => setActiveTab("dashboard")}
+            className="btn"
+          >
+            Dashboard
+          </button>
+          <button
+            title="Settings: Update your account preferences"
+            onClick={() => setActiveTab("settings")}
+            className="btn"
+          >
+            Settings
+          </button>
+          <button
+            title="Logs: View backend and frontend logs"
+            onClick={() => setActiveTab("logs")}
+            className="btn"
+          >
+            Logs
+          </button>
+          <button
+            title="Changelog: Read the latest updates"
+            onClick={() => setActiveTab("changelog")}
+            className="btn"
+          >
+            Changelog
+          </button>
         </nav>
       </header>
 

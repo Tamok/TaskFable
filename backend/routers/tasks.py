@@ -98,7 +98,8 @@ def get_tasks(viewer_username: str = Query(...), db: Session = Depends(get_db)):
                 "owner_username": owner.username,  # Always show owner
                 "co_owners": [],
                 "comments": [],
-                "history": history_list
+                "history": history_list,
+                "created_at": task.created_at
             }
         else:
             task_dict = {
@@ -125,7 +126,8 @@ def get_tasks(viewer_username: str = Query(...), db: Session = Depends(get_db)):
                     }
                     for c in task.comments
                 ],
-                "history": history_list
+                "history": history_list,
+                "created_at": task.created_at
             }
         task_list.append(task_dict)
     return task_list

@@ -122,7 +122,76 @@
     border: 1px solid #ccc;
     border-radius: 4px;
   }
-  
+
+/* Sort/Filter Bar Container */
+.sort-filter-bar {
+  margin-bottom: 1rem;
+  border-radius: 4px;
+  background-color: #f7f7f7;
+  border: 1px solid #ddd;
+  font-family: 'Roboto', sans-serif;
+  color: #333;
+}
+
+/* Dark mode styling */
+body.dark .sort-filter-bar {
+  background-color: #1e1e1e;
+  border: 1px solid #555;
+  color: #eee;
+}
+
+/* Header */
+.sfb-header {
+  padding: 0.5rem 1rem;
+  border-bottom: 1px solid #ddd;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-weight: bold;
+}
+
+/* Dark mode header */
+body.dark .sfb-header {
+  border-bottom: 1px solid #555;
+}
+
+/* Controls area */
+.sfb-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+/* Each control element */
+.sfb-control label {
+  font-size: 0.9em;
+  display: flex;
+  align-items: center;
+}
+
+/* Input and Select styling */
+.sfb-control input[type="text"],
+.sfb-control select {
+  margin-left: 0.5rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  font-family: inherit;
+  font-size: 0.9em;
+  background-color: #fff;
+  color: #333;
+}
+
+/* Dark mode inputs */
+body.dark .sfb-control input[type="text"],
+body.dark .sfb-control select {
+  background-color: #333;
+  color: #eee;
+  border: 1px solid #555;
+}
+
 /* Feed (Story) */
 .feed {
     padding: 10px;

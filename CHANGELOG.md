@@ -1,5 +1,15 @@
 # Changelog
 
+## [0.2.6] - 2025-03-XX
+### Added
+- **Card Sorting & Filtering:** Implemented sorting (ascending/descending) by Title, Owner, Date Created, and Last Modified, along with filtering across all card content.
+- **Manual Reordering:** Integrated manual drag-and-drop reordering for cards within a column using @hello-pangea/dnd when sorting is set to Manual Order.
+- **Collapsible Filter Bar:** Added a collapsible, dark theme–compliant Sort/Filter bar with tooltips and a “search by content” placeholder that aligns with the rest of the UI.
+
+### Fixed
+- **API Data Issue:** Updated the tasks API endpoint to include the `created_at` field (previously returned as null), so that date-based sorting works correctly.
+- **ESLint Warnings:** Resolved React Hooks dependency warnings by wrapping fetch functions (fetchTasks and fetchStories) with useCallback.
+
 ## [0.2.5] - 2025-03-07
 ### Added
 - **Dashboard Tooltips:** Added descriptive tooltips (using `title` attributes) to many dashboard elements, including:
