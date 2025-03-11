@@ -5,7 +5,14 @@ import CONFIG from "../config";
 import { logFrontendEvent } from "../utils/logger";
 import Select from "react-select";
 
-function CreateTaskForm({ refreshTasks, currentUser, isDarkMode, addNotification }) {
+/**
+ * CreateTaskForm Component
+ *
+ * Provides a form for creating a new task.
+ * The task will be associated with the currently selected Quest Log (board).
+ * Co-owner selection uses react-select for a multi-select dropdown.
+ */
+function CreateTaskForm({ refreshTasks, currentUser, currentQuestLog, isDarkMode, addNotification }) {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [color, setColor] = useState("blue");
@@ -74,6 +81,7 @@ function CreateTaskForm({ refreshTasks, currentUser, isDarkMode, addNotification
     }),
   };
 
+  // Handle form submission to create a new task.
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -85,7 +93,8 @@ function CreateTaskForm({ refreshTasks, currentUser, isDarkMode, addNotification
         is_private: isPrivate,
         locked: isLocked,
         owner_username: currentUser.username,
-        co_owners: coOwnersStr
+        co_owners: coOwnersStr,
+        quest_log_id: currentQuestLog.id  // Associate with the current Quest Log.
       };
       await axios.post(`${CONFIG.BACKEND_URL}/tasks`, taskData);
       setTitle("");
@@ -106,7 +115,7 @@ function CreateTaskForm({ refreshTasks, currentUser, isDarkMode, addNotification
     <div className="create-task-form">
       <h2>Create a New Task</h2>
       <form onSubmit={handleSubmit}>
-              <input
+        <input
           type="text"
           placeholder="Title"
           value={title}

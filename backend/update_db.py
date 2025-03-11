@@ -1,58 +1,85 @@
+"""
+backend/update_db.py
+--------------------
+This script updates the TaskFable database by preserving the "users" table and recreating
+all other tables from scratch. It also updates the stored database version.
+Verbose logging is enabled to indicate each major step.
+"""
+
 import sqlite3
 from db import engine
 from models import Base
+from sqlalchemy import text, MetaData, Table, Column, String
 import os
+from datetime import datetime
+import logging
 
-# Tables to drop (all except "users")
-TABLES_TO_DROP = ["task_history", "stories", "comments", "tasks"]
+# Configure verbose logging.
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger("backend-logger")
 
-def column_exists(cursor, table, column):
-    cursor.execute(f"PRAGMA table_info({table})")
-    columns = [row[1] for row in cursor.fetchall()]
-    return column in columns
+CURRENT_DB_VERSION = "0.2.6"
+DB_PATH = "./gamified_tasks.db"
 
-def update_users_table(db_path="./gamified_tasks.db"):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    # Ensure new columns in users exist
-    for col_def in [
-        ("timezone", "TEXT DEFAULT 'UTC'"),
-        ("show_tooltips", "BOOLEAN DEFAULT 1"),
-        ("dark_mode", "BOOLEAN DEFAULT 0"),
-        ("skip_confirm_begin", "BOOLEAN DEFAULT 0"),
-        ("skip_confirm_end", "BOOLEAN DEFAULT 0")
-    ]:
-        col, definition = col_def
-        if not column_exists(cursor, "users", col):
-            cursor.execute(f"ALTER TABLE users ADD COLUMN {col} {definition}")
-            print(f"Added column '{col}' to 'users' table.")
+def drop_non_user_tables():
+    """
+    Drops all tables except for the 'users' table.
+    """
+    # List of tables to preserve.
+    preserve_tables = {"users", "db_version"}
+    # Get all table names from the current metadata.
+    metadata = Base.metadata
+    all_tables = {table.name: table for table in metadata.sorted_tables}
+    tables_to_drop = [table for name, table in all_tables.items() if name not in preserve_tables]
+    
+    with engine.begin() as connection:
+        if tables_to_drop:
+            logger.info(f"Dropping tables: {[t.name for t in tables_to_drop]}")
+            metadata.drop_all(bind=connection, tables=tables_to_drop)
         else:
-            print(f"Column '{col}' already exists in 'users' table.")
-    conn.commit()
-    conn.close()
-
-def drop_non_user_tables(db_path="./gamified_tasks.db"):
-    conn = sqlite3.connect(db_path)
-    cursor = conn.cursor()
-    cursor.execute("PRAGMA foreign_keys = OFF;")
-    for table in TABLES_TO_DROP:
-        cursor.execute(f"DROP TABLE IF EXISTS {table};")
-        print(f"Dropped table '{table}' if it existed.")
-    conn.commit()
-    conn.close()
-
+            logger.info("No tables to drop.")
+    
 def recreate_tables():
-    Base.metadata.create_all(bind=engine)
-    print("Recreated missing tables from models.")
+    """
+    Recreates all tables defined in Base.metadata (except those preserved, if any).
+    """
+    with engine.begin() as connection:
+        # Recreate all tables. The 'users' table will be preserved since we haven't dropped it.
+        Base.metadata.create_all(bind=connection)
+    logger.info("Recreated tables from models.")
 
-def update_db(db_path="./gamified_tasks.db"):
-    print("Updating users table...")
-    update_users_table(db_path)
-    print("Dropping non-user tables...")
-    drop_non_user_tables(db_path)
-    print("Recreating dropped tables...")
+def create_or_update_db_version():
+    """
+    Creates or updates the db_version table with the current version.
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS db_version (
+            version TEXT PRIMARY KEY
+        );
+    """)
+    conn.commit()
+    cursor.execute("SELECT version FROM db_version LIMIT 1;")
+    row = cursor.fetchone()
+    if row is None:
+        cursor.execute("INSERT INTO db_version (version) VALUES (?);", (CURRENT_DB_VERSION,))
+        logger.info(f"Database version set to {CURRENT_DB_VERSION}")
+    else:
+        cursor.execute("UPDATE db_version SET version = ?;", (CURRENT_DB_VERSION,))
+        logger.info(f"Database version updated to {CURRENT_DB_VERSION}")
+    conn.commit()
+    conn.close()
+
+def run_update():
+    logger.info("Starting database update process...")
+    # Drop all non-user tables.
+    drop_non_user_tables()
+    # Recreate tables from models.
     recreate_tables()
-    print("Database migration complete.")
+    # Update the database version.
+    create_or_update_db_version()
+    logger.info("Database update complete.")
 
 if __name__ == "__main__":
-    update_db()
+    run_update()

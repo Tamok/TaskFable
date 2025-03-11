@@ -1,26 +1,43 @@
-# backend/main.py
+"""
+backend/main.py
+---------------
+Main application entry point for TaskFable.
+This file configures the FastAPI application, including CORS, exception handling,
+and includes all routers (users, tasks, stories, logs, changelog, and questlogs).
+It also provides a simple endpoint to retrieve the server's local timezone.
+Note: This file uses relative imports. To run it, execute from the project root:
+    python -m backend.main
+"""
+
 from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from routers import tasks, stories, users, logs, changelog
-import logging_config
-
+from .routers import tasks, stories, users, logs, changelog, questlogs
+from . import logging_config
 from datetime import datetime
-import pytz
 from tzlocal import get_localzone
+from contextlib import asynccontextmanager
 
-app = FastAPI(title="TaskFable API", version="0.1.0", docs_url="/")
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup code
+    logging_config.backend_logger.info("Application startup complete.")
+    yield
+    # Shutdown code
+    logging_config.backend_logger.info("Application shutdown complete.")
 
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(request: Request, exc: RequestValidationError):
-    logging_config.backend_logger.error(f"Validation error on {request.url}: {exc.errors()}")
+app = FastAPI(lifespan=lifespan, title="TaskFable API", version="0.2.6", docs_url="/")
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
     return JSONResponse(
-        status_code=422,
-        content={"detail": exc.errors()},
+        status_code=500,
+        content={"detail": "Internal Server Error"},
     )
 
-# Configure CORS
+# Configure CORS (if needed)
+from fastapi.middleware.cors import CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -29,25 +46,18 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include routers
+# Include routers.
 app.include_router(users.router, prefix="/users")
 app.include_router(tasks.router, prefix="/tasks")
 app.include_router(stories.router, prefix="/stories")
 app.include_router(logs.router, prefix="/logs")
 app.include_router(changelog.router, prefix="/other")
-
-@app.on_event("startup")
-def startup_event():
-    logging_config.backend_logger.info("Application startup complete.")
-
-@app.on_event("shutdown")
-def shutdown_event():
-    logging_config.backend_logger.info("Application shutdown complete.")
+app.include_router(questlogs.router, prefix="/questlogs")
 
 @app.get("/server/timezone")
 def get_server_timezone():
     """
-    Returns the server's local timezone offset in 'UTC±HH:MM' format.
+    Returns the server's local timezone offset in the format 'UTC±HH:MM'.
     """
     local_zone = get_localzone()
     offset = local_zone.utcoffset(datetime.now())
@@ -59,4 +69,4 @@ def get_server_timezone():
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("backend.main:app", host="0.0.0.0", port=8000, reload=True)

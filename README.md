@@ -1,6 +1,6 @@
 # TaskFable
 
-**Version:** 0.2.6
+**Version:** 0.3.0
 
 ## Overview
 TaskFable is a web application that turns task management into an engaging adventure. Users create tasks (quests), add comments, and gain XP and currency as they progress. The application supports features like private tasks, co-owner collaboration, and a story feed that weaves task events into mini-adventures.
@@ -10,8 +10,6 @@ TaskFable is a web application that turns task management into an engaging adven
 - **Collaborative Tasks:** Assign co-owners to tasks using a picklist (now fixed).
 - **Locked Tasks:** Tasks marked as "Done" become locked to prevent further editing by non-owners.
 - **Stories & XP:** Generate mini-stories for tasks along with XP and currency rewards.
-- **Robust Logging:** Detailed logging across backend and frontend to assist in debugging.
-- **Timezones:** Users can choose from a complete list of IANA time zones in the settings.
 
 ## Installation
 1. **Backend:**  

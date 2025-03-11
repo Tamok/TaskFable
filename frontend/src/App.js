@@ -6,12 +6,20 @@ import Feed from "./components/Feed";
 import CreateTaskForm from "./components/CreateTaskForm";
 import SettingsPage from "./components/SettingsPage";
 import LogsPage from "./components/LogsPage";
-import ChangelogPage from "./components/ChangelogPage"; // New component for the changelog page
+import ChangelogPage from "./components/ChangelogPage";
 import Login from "./components/Login";
 import Notifications from "./components/Notifications";
+import QuestLogSelector from "./components/QuestLogSelector";
+import TestReportDynamicPage from "./components/TestReportDynamicPage";
 import CONFIG from "./config";
 import "./styles/index.css";
 
+/**
+ * App Component
+ *
+ * Manages user authentication, current Quest Log selection, and navigation between views.
+ * Fetches tasks and stories for the selected Quest Log.
+ */
 function App() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [tasks, setTasks] = useState([]);
@@ -21,63 +29,38 @@ function App() {
     const stored = localStorage.getItem("user");
     return stored ? JSON.parse(stored) : null;
   });
+  const [currentQuestLog, setCurrentQuestLog] = useState(null);
 
-  // Notifications management
-  const addNotification = (message) => {
-    const id = Date.now();
-    setNotifications((prev) => [...prev, { id, message }]);
-  };
-  const removeNotification = (id) => {
-    setNotifications((prev) => prev.filter((n) => n.id !== id));
-  };
-
-  // If user has no timezone, fetch the server's timezone
-  useEffect(() => {
-    const initUserTimezone = async () => {
-      if (user && !user.timezone) {
-        try {
-          const res = await axios.get(`${CONFIG.BACKEND_URL}/server/timezone`);
-          const serverTz = res.data.server_timezone;
-          const updatedUser = { ...user, timezone: serverTz };
-          localStorage.setItem("user", JSON.stringify(updatedUser));
-          setUser(updatedUser);
-        } catch (error) {
-          console.error("Error fetching server timezone:", error);
-        }
-      }
-    };
-    initUserTimezone();
-  }, [user]);
-
-  // Wrap fetchTasks so it only changes when 'user' changes.
+  // Fetch tasks for the current Quest Log.
   const fetchTasks = useCallback(async () => {
-    if (!user) return;
+    if (!user || !currentQuestLog) return;
     try {
       const res = await axios.get(
-        `${CONFIG.BACKEND_URL}/tasks?viewer_username=${user.username}`
+        `${CONFIG.BACKEND_URL}/tasks?viewer_username=${user.username}&quest_log_id=${currentQuestLog.id}`
       );
       setTasks(res.data);
+      console.log(`Fetched tasks for Quest Log ${currentQuestLog.id}:`, res.data);
     } catch (error) {
       console.error("Error fetching tasks:", error);
     }
-  }, [user]);
+  }, [user, currentQuestLog]);
 
-  // Wrap fetchStories so it only changes when 'user' changes.
+  // Fetch stories for the current Quest Log.
   const fetchStories = useCallback(async () => {
-    if (!user) return;
+    if (!user || !currentQuestLog) return;
     try {
       const res = await axios.get(
-        `${CONFIG.BACKEND_URL}/stories?viewer_username=${user.username}`
+        `${CONFIG.BACKEND_URL}/stories?viewer_username=${user.username}&quest_log_id=${currentQuestLog.id}`
       );
       setStories(res.data);
+      console.log(`Fetched stories for Quest Log ${currentQuestLog.id}:`, res.data);
     } catch (error) {
       console.error("Error fetching stories:", error);
     }
-  }, [user]);
+  }, [user, currentQuestLog]);
 
-  // Combined effect: fetch immediately and set up polling when user or user's timezone changes.
   useEffect(() => {
-    if (user) {
+    if (user && currentQuestLog) {
       fetchTasks();
       fetchStories();
       const interval = setInterval(() => {
@@ -86,15 +69,25 @@ function App() {
       }, CONFIG.POLL_INTERVAL);
       return () => clearInterval(interval);
     }
-  }, [user, user?.timezone, fetchTasks, fetchStories]);
+  }, [user, currentQuestLog, fetchTasks, fetchStories]);
 
-  // Handle login and persist user.
+  // Notification management.
+  const addNotification = (message) => {
+    const id = Date.now();
+    setNotifications((prev) => [...prev, { id, message }]);
+  };
+  const removeNotification = (id) => {
+    setNotifications((prev) => prev.filter((n) => n.id !== id));
+  };
+
+  // Handle user login.
   const handleUserLogin = (userData) => {
     setUser(userData);
     localStorage.setItem("user", JSON.stringify(userData));
+    console.log("User logged in:", userData);
   };
 
-  // Refresh user details and re-fetch tasks/stories.
+  // Refresh user details.
   const refreshUser = async () => {
     if (!user) return;
     try {
@@ -104,12 +97,12 @@ function App() {
       localStorage.setItem("user", JSON.stringify(updatedUser));
       await fetchTasks();
       await fetchStories();
+      console.log("User refreshed:", updatedUser);
     } catch (error) {
       console.error("Error refreshing user:", error);
     }
   };
 
-  // Toggle dark mode on the body element based on user preference.
   useEffect(() => {
     if (user && user.dark_mode) {
       document.body.classList.add("dark");
@@ -131,13 +124,12 @@ function App() {
         </h1>
         <p className="welcome-text">Welcome, {user.username}</p>
         <nav className="main-nav">
-          <button
-            title="Dashboard: View your tasks and story feed"
-            onClick={() => setActiveTab("dashboard")}
-            className="btn"
-          >
-            Dashboard
-          </button>
+          <QuestLogSelector
+            currentUser={user}
+            currentQuestLog={currentQuestLog}
+            setCurrentQuestLog={setCurrentQuestLog}
+            onAccessQL={() => setActiveTab("dashboard")}
+          />
           <button
             title="Settings: Update your account preferences"
             onClick={() => setActiveTab("settings")}
@@ -159,15 +151,23 @@ function App() {
           >
             Changelog
           </button>
+          <button
+            title="Test Report: View dynamic test report"
+            onClick={() => setActiveTab("test_report")}
+            className="btn"
+          >
+            Test Report
+          </button>
         </nav>
       </header>
 
-      {activeTab === "dashboard" && (
+      {activeTab === "dashboard" && currentQuestLog && (
         <div className="dashboard">
           <div className="board-container">
             <CreateTaskForm
               refreshTasks={fetchTasks}
               currentUser={user}
+              currentQuestLog={currentQuestLog}
               isDarkMode={user.dark_mode}
               addNotification={addNotification}
             />
@@ -180,11 +180,7 @@ function App() {
       )}
       {activeTab === "settings" && (
         <div className="page-container">
-          <SettingsPage
-            currentUser={user}
-            refreshUser={refreshUser}
-            addNotification={addNotification}
-          />
+          <SettingsPage currentUser={user} refreshUser={refreshUser} addNotification={addNotification} />
         </div>
       )}
       {activeTab === "logs" && (
@@ -196,6 +192,11 @@ function App() {
         <div className="page-container">
           <ChangelogPage />
         </div>
+      )}
+        {activeTab === "test_report" && (
+          <div className="page-container">
+            <TestReportDynamicPage />
+          </div>
       )}
     </div>
   );

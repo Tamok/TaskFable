@@ -1,9 +1,10 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
-from db import SessionLocal
-from models import Story, Task, User
+from ..db import SessionLocal
+from ..models import Story, Task, User
 from datetime import datetime
-import logging_config
+from .. import logging_config
+
 
 router = APIRouter()
 

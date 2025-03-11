@@ -1,6 +1,45 @@
 # Changelog
 
-## [0.2.6] - 2025-03-XX
+## [0.3.0] - 2025-03-10
+### Added
+- **Multi-Quest Log (QL) Support:**  
+  - Ability to create and switch between multiple boards (Quest Logs) via a new Quest Log selector UI.  
+  - The selector button now behaves as follows: clicking its main area navigates to the current QL dashboard, while clicking the dropdown arrow opens a list for switching QLs or creating a new one.
+- **Backend Invite Functionality & Activity Logging:**  
+  - Endpoints for generating unique invite links (with optional expiration) for Quest Logs have been implemented.  
+  - Backend now logs user activities such as join, spectate, and invite link clicks.  
+  - (Note: The UI for managing invites and viewing board activity subtabs is not implemented yet; this is planned for a future release.)
+- **Dynamic Test Report Generation:**  
+  - A new backend script (`backend/scripts/generate_test_report.py`) runs integration tests with JSON reporting enabled.  
+  - A new frontend component (`TestReportDynamicPage`) dynamically fetches and displays the JSON test report in a well-formatted, expandable table with detailed views for each test.
+- **FastAPI Lifespan Handler:**  
+  - Replaced deprecated `@app.on_event("startup")` and `@app.on_event("shutdown")` hooks with an async lifespan context manager.
+- **SQLAlchemy Model Updates:**  
+  - Updated the models to use `sqlalchemy.orm.declarative_base()` per SQLAlchemy 2.0 recommendations.  
+  - Added cascade deletion on Quest Log relationships (e.g. tasks) to prevent orphaned records and NOT NULL constraint errors.
+
+### Changed
+- **File Path Adjustments:**  
+  - Updated backend endpoints (e.g. for `/other/changelog` and `/logs/test_report`) to use absolute paths relative to the module’s location, ensuring consistency when running from the project root.
+- **Frontend UI Enhancements:**  
+  - Updated the Quest Log selector and expand/collapse buttons to match the styling of other dashboard buttons.
+  - Enhanced the dynamic test report view with an expandable details card for each test, showing a nicely formatted summary of setup, call, teardown, and logs.
+- **Integration Testing:**  
+  - Improved integration tests to create isolated test data (new Quest Logs, tasks, etc.) and clean them up afterward.
+
+### Fixed
+- **Relative Import & Path Issues:**  
+  - Fixed problems with relative linking by switching to absolute paths (using `os.path.abspath`) where necessary.
+- **Database Cascade Issues:**  
+  - Fixed database update errors (NOT NULL constraint) by configuring cascade deletion for Quest Log tasks.
+- **Accurate Duration Reporting:**  
+  - Updated the dynamic test report to compute total test duration by summing setup, call, and teardown durations rather than showing only a partial value.
+
+### Note
+- **Subtabs / Invite Link UI:**  
+  - Although the backend now supports invites and activity logging, the user interface for subtabs (e.g. for board activity and managing invite links) has not yet been implemented. This functionality is planned for a future release.
+
+## [0.2.6] - 2025-03-06
 ### Added
 - **Card Sorting & Filtering:** Implemented sorting (ascending/descending) by Title, Owner, Date Created, and Last Modified, along with filtering across all card content.
 - **Manual Reordering:** Integrated manual drag-and-drop reordering for cards within a column using @hello-pangea/dnd when sorting is set to Manual Order.
@@ -10,7 +49,7 @@
 - **API Data Issue:** Updated the tasks API endpoint to include the `created_at` field (previously returned as null), so that date-based sorting works correctly.
 - **ESLint Warnings:** Resolved React Hooks dependency warnings by wrapping fetch functions (fetchTasks and fetchStories) with useCallback.
 
-## [0.2.5] - 2025-03-07
+## [0.2.5] - 2025-03-05
 ### Added
 - **Dashboard Tooltips:** Added descriptive tooltips (using `title` attributes) to many dashboard elements, including:
   - Navigation buttons in the main header.
@@ -24,7 +63,7 @@
 ### Fixed
 - Improved user experience by hiding action buttons for locked tasks from non-authorized users while allowing co-owners full access.
 
-## [0.2.4] - 2025-03-06
+## [0.2.4] - 2025-03-05
 ### Added
 - **Changelog Page Enhancements:** The Changelog page now renders markdown using `react-markdown`, and a new backend endpoint (`/other/changelog`) serves the raw changelog file.
 - **Dark Mode Markdown Styling:** Added dark mode overrides in the markdown styling (in markdown.css) so that headings, paragraphs, inline code, code blocks, and blockquotes display appropriately on dark backgrounds.
@@ -36,7 +75,7 @@
 - **Header Redesign:** Updated the header to display “TaskFable” with a fancy gradient background and the current version (from config.js) in smaller text.
 - **CSS Modularization:** Refactored a large stylesheet into multiple files (base.css, layout.css, components.css, themes.css, notifications.css, markdown.css) for better maintainability and theming.
 
-## [0.2.3] - 2025-03-05
+## [0.2.3] - 2025-03-04
 ### Added
 - Added a `/server/timezone` endpoint to return the server’s local UTC offset.
 - If a user has no timezone set, the app now automatically fetches and stores the server’s timezone.

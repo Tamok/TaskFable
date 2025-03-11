@@ -1,0 +1,63 @@
+/* frontend/src/components/QuestLogSelector.css */
+.questlog-selector-container {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown panel styling */
+.questlog-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: #fff;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  width: 100%;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.questlog-dropdown ul {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.questlog-dropdown li {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.questlog-dropdown li:hover {
+  background-color: #f0f0f0;
+}
+
+/* Board creation area in dropdown */
+.questlog-create {
+  display: flex;
+  padding: 8px 12px;
+  border-top: 1px solid #ccc;
+}
+
+.questlog-create input {
+  flex: 1;
+  padding: 4px;
+  margin-right: 4px;
+}
+
+/* Dark mode overrides */
+body.dark .questlog-dropdown {
+  background-color: #2e2e2e;
+  border-color: #555;
+  color: #eee;
+}
+
+body.dark .questlog-dropdown li:hover {
+  background-color: #444;
+}
+
+body.dark .questlog-create input {
+  background-color: #333;
+  color: #eee;
+  border: 1px solid #555;
+}

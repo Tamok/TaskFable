@@ -1,12 +1,20 @@
+"""
+backend/routers/tasks.py
+------------------------
+This router manages task creation, updates, and related actions.
+It now requires a quest_log_id parameter for creating and listing tasks.
+Tasks are owned by one Quest Log, though they may later be mirrored as "Oracle Tasks."
+"""
+
 from fastapi import APIRouter, Depends, HTTPException, Query, Body
 from sqlalchemy.orm import Session
 from datetime import datetime
-from models import Task, TaskStatus, User, Comment, TaskHistory
-from db import SessionLocal
-from llm_integration import generate_story_for_task
-from routers.stories import add_story
+from ..models import Task, TaskStatus, User, Comment, TaskHistory, QuestLogMembership
+from ..db import SessionLocal
+from ..llm_integration import generate_story_for_task
+from .stories import add_story
 from pydantic import BaseModel, field_validator
-import logging_config
+from .. import logging_config
 from sqlalchemy import text
 
 router = APIRouter()
@@ -18,6 +26,7 @@ def get_db():
     finally:
         db.close()
 
+# Model for creating a task.
 class TaskCreate(BaseModel):
     title: str
     description: str = None
@@ -25,9 +34,10 @@ class TaskCreate(BaseModel):
     scheduled_time: datetime = None
     repeat_interval: int = None
     is_private: bool = False
-    locked: bool = False           # <-- NEW: allow creating a locked task
+    locked: bool = False  # Allow creating a locked task
     owner_username: str
-    co_owners: str = ""  # Comma-separated usernames
+    co_owners: str = ""   # Comma-separated usernames
+    quest_log_id: int     # New: associate task with a Quest Log
 
 class StatusUpdate(BaseModel):
     new_status: TaskStatus
@@ -61,9 +71,25 @@ class CommentEdit(BaseModel):
         except Exception as e:
             raise ValueError("task_id must be an integer") from e
 
+# GET tasks endpoint: requires viewer_username and quest_log_id.
 @router.get("/", response_model=list)
-def get_tasks(viewer_username: str = Query(...), db: Session = Depends(get_db)):
-    tasks = db.query(Task).all()
+def get_tasks(
+    viewer_username: str = Query(...),
+    quest_log_id: int = Query(...),
+    db: Session = Depends(get_db)
+):
+    # Check if the viewer is a member of this quest log.
+    membership = (
+        db.query(QuestLogMembership)
+        .join(User, QuestLogMembership.user_id == User.id)
+        .filter(QuestLogMembership.quest_log_id == quest_log_id, User.username == viewer_username)
+        .first()
+    )
+    if membership is None:
+        # If the user is not a member, return an empty list.
+        return []
+    
+    tasks = db.query(Task).filter(Task.quest_log_id == quest_log_id).all()
     task_list = []
     for task in tasks:
         owner = db.query(User).filter(User.id == task.owner_id).first()
@@ -79,8 +105,8 @@ def get_tasks(viewer_username: str = Query(...), db: Session = Depends(get_db)):
                 except:
                     continue
         is_owner = (owner.username == viewer_username) or (viewer_username in co_owners)
-        # Fetch task history records
-        history_records = db.query(TaskHistory).filter(TaskHistory.task_id == task.id).order_by(TaskHistory.timestamp.asc()).all()
+        history_records = db.query(TaskHistory).filter(TaskHistory.task_id == task.id)\
+            .order_by(TaskHistory.timestamp.asc()).all()
         history_list = [{"status": h.status, "timestamp": h.timestamp.isoformat()} for h in history_records]
         
         if task.is_private and not is_owner:
@@ -95,7 +121,7 @@ def get_tasks(viewer_username: str = Query(...), db: Session = Depends(get_db)):
                 "is_private": task.is_private,
                 "locked": task.locked,
                 "owner_id": task.owner_id,
-                "owner_username": owner.username,  # Always show owner
+                "owner_username": owner.username,
                 "co_owners": [],
                 "comments": [],
                 "history": history_list,
@@ -121,7 +147,7 @@ def get_tasks(viewer_username: str = Query(...), db: Session = Depends(get_db)):
                         "content": c.content,
                         "created_at": c.created_at,
                         "user_id": c.user_id,
-                        "owner_username": db.query(User).filter(User.id == c.user_id).first().username 
+                        "owner_username": db.query(User).filter(User.id == c.user_id).first().username
                                           if db.query(User).filter(User.id == c.user_id).first() else "Anonymous"
                     }
                     for c in task.comments
@@ -132,11 +158,20 @@ def get_tasks(viewer_username: str = Query(...), db: Session = Depends(get_db)):
         task_list.append(task_dict)
     return task_list
 
+# Create a new task.
 @router.post("/", response_model=dict)
 def create_task(task_data: TaskCreate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == task_data.owner_username).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
+    
+    # Verify membership in the quest log.
+    membership = db.query(QuestLogMembership).filter(
+        QuestLogMembership.quest_log_id == task_data.quest_log_id,
+        QuestLogMembership.user_id == user.id
+    ).first()
+    if not membership:
+        raise HTTPException(status_code=403, detail="User is not a member of the specified Quest Log")
     
     co_owner_usernames = [x.strip() for x in task_data.co_owners.split(",") if x.strip()]
     co_owner_ids_list = []
@@ -146,7 +181,7 @@ def create_task(task_data: TaskCreate, db: Session = Depends(get_db)):
             raise HTTPException(status_code=400, detail=f"Co-owner '{username}' does not exist")
         co_owner_ids_list.append(str(co_owner.id))
     co_owner_ids_str = ",".join(co_owner_ids_list) if co_owner_ids_list else ""
-
+    
     task = Task(
         title=task_data.title,
         description=task_data.description,
@@ -154,21 +189,22 @@ def create_task(task_data: TaskCreate, db: Session = Depends(get_db)):
         scheduled_time=task_data.scheduled_time,
         repeat_interval=task_data.repeat_interval,
         is_private=task_data.is_private,
-        locked=task_data.locked,       # <-- NEW: set locked value from request
+        locked=task_data.locked,
         owner_id=user.id,
         status=TaskStatus.todo,
-        co_owner_ids=co_owner_ids_str
+        co_owner_ids=co_owner_ids_str,
+        quest_log_id=task_data.quest_log_id
     )
-
     db.add(task)
     db.commit()
     db.refresh(task)
-    logging_config.backend_logger.info(f"Task created: {task.id} by user {user.username}")
+    logging_config.backend_logger.info(f"Task {task.id} created in Quest Log {task_data.quest_log_id} by '{user.username}'.")
     history_record = TaskHistory(task_id=task.id, status="Created")
     db.add(history_record)
     db.commit()
     return {"message": "Task created", "task_id": task.id}
 
+# Update task status.
 @router.put("/{task_id}/status", response_model=dict)
 def update_task_status(task_id: int, status_data: StatusUpdate, db: Session = Depends(get_db)):
     task = db.query(Task).filter(Task.id == task_id).first()
@@ -192,7 +228,7 @@ def update_task_status(task_id: int, status_data: StatusUpdate, db: Session = De
     task.status = new_status
     db.commit()
     db.refresh(task)
-    logging_config.backend_logger.info(f"Task {task.id} status updated to {new_status} by user {status_data.username}")
+    logging_config.backend_logger.info(f"Task {task.id} status updated to {new_status} by '{status_data.username}'.")
     
     history_record = TaskHistory(task_id=task.id, status=new_status)
     db.add(history_record)
@@ -203,11 +239,9 @@ def update_task_status(task_id: int, status_data: StatusUpdate, db: Session = De
         add_story(task_id, task.owner_id, story_text, xp, currency, db)
     
     if new_status == TaskStatus.done:
-        # Lock the task when marked as done
         task.locked = True
         db.commit()
-        logging_config.backend_logger.info(f"Task {task.id} locked as done")
-        
+        logging_config.backend_logger.info(f"Task {task.id} locked as done.")
         participants = {task.owner_id}
         for comment in task.comments:
             participants.add(comment.user_id)
@@ -224,7 +258,7 @@ def update_task_status(task_id: int, status_data: StatusUpdate, db: Session = De
     
     return {"message": "Task updated", "task_id": task.id}
 
-
+# Add a comment to a task.
 @router.post("/comment", response_model=dict)
 def add_comment(comment_data: CommentCreate, db: Session = Depends(get_db)):
     user = db.query(User).filter(User.username == comment_data.username).first()
@@ -241,32 +275,30 @@ def add_comment(comment_data: CommentCreate, db: Session = Depends(get_db)):
     db.add(comment)
     db.commit()
     db.refresh(comment)
-    logging_config.backend_logger.info(f"Comment added to task {task.id} by user {user.username}")
+    logging_config.backend_logger.info(f"Comment {comment.id} added to task {task.id} by '{user.username}'.")
     return {"message": "Comment added", "comment_id": comment.id}
 
+# Edit a comment.
 @router.put("/comment/edit", response_model=dict)
 def edit_comment(comment_data: CommentEdit = Body(...), db: Session = Depends(get_db)):
-    # Look up the comment using both comment_id and task_id for extra validation.
     comment = db.query(Comment).filter(
         Comment.id == comment_data.comment_id,
         Comment.task_id == comment_data.task_id
     ).first()
     if not comment:
         raise HTTPException(status_code=404, detail="Comment not found for given task")
-    
     user = db.query(User).filter(User.username == comment_data.username).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
-    
     if comment.user_id != user.id:
         raise HTTPException(status_code=403, detail="Cannot edit another user's comment")
-    
     comment.content = comment_data.new_content
     db.commit()
     db.refresh(comment)
-    logging_config.backend_logger.info(f"Comment {comment.id} edited by user {user.username}")
+    logging_config.backend_logger.info(f"Comment {comment.id} edited by '{user.username}'.")
     return {"message": "Comment updated", "comment_id": comment.id}
 
+# Edit task description.
 @router.put("/{task_id}/edit", response_model=dict)
 def edit_task_description(task_id: int, edit_data: TaskEdit, username: str, db: Session = Depends(get_db)):
     task = db.query(Task).filter(Task.id == task_id).first()
@@ -276,16 +308,17 @@ def edit_task_description(task_id: int, edit_data: TaskEdit, username: str, db: 
     co_owner_ids = []
     if task.co_owner_ids:
         co_owner_ids = [int(x.strip()) for x in task.co_owner_ids.split(",") if x.strip().isdigit()]
-    if owner.username != username and username not in [db.query(User).filter(User.id==uid).first().username for uid in co_owner_ids]:
+    if owner.username != username and username not in [db.query(User).filter(User.id == uid).first().username for uid in co_owner_ids]:
         raise HTTPException(status_code=403, detail="Only the owner or co-owners can edit the task")
     if task.status == TaskStatus.done:
         raise HTTPException(status_code=400, detail="Cannot edit description on Done tasks")
     task.description = edit_data.description
     db.commit()
     db.refresh(task)
-    logging_config.backend_logger.info(f"Task {task.id} description edited by user {username}")
+    logging_config.backend_logger.info(f"Task {task.id} description edited by '{username}'.")
     return {"message": "Task description updated", "task_id": task.id}
 
+# Developer endpoints for purging tasks.
 @router.post("/dev/purge", response_model=dict)
 def purge_tasks(db: Session = Depends(get_db)):
     db.execute(text("DELETE FROM task_history;"))
@@ -293,12 +326,12 @@ def purge_tasks(db: Session = Depends(get_db)):
     db.execute(text("DELETE FROM comments;"))
     db.execute(text("DELETE FROM tasks;"))
     db.commit()
-    logging_config.backend_logger.info("All tasks purged by dev command.")
+    logging_config.backend_logger.info("All tasks purged by developer command.")
     return {"message": "All tasks purged."}
 
 @router.post("/dev/delete_todo", response_model=dict)
 def delete_todo_tasks(db: Session = Depends(get_db)):
     deleted = db.query(Task).filter(Task.status == TaskStatus.todo).delete()
     db.commit()
-    logging_config.backend_logger.info(f"{deleted} To-Do tasks deleted by dev command.")
+    logging_config.backend_logger.info(f"{deleted} To-Do tasks deleted by developer command.")
     return {"message": f"{deleted} To-Do tasks deleted."}

@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from sqlalchemy.orm import Session
-from db import SessionLocal
-from models import User
+from ..db import SessionLocal
+from ..models import User
 from pydantic import BaseModel, EmailStr
 from passlib.context import CryptContext
 from typing import Optional

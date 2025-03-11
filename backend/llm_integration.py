@@ -1,5 +1,5 @@
 from transformers import pipeline
-from models import Task
+from .models import Task
 import re
 from typing import Tuple
 
