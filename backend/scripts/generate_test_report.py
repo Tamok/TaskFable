@@ -12,6 +12,7 @@ import subprocess
 import json
 import os
 from datetime import datetime
+import shutil
 
 # Define directories and file paths.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
@@ -23,11 +24,20 @@ if not os.path.exists(REPORT_DIR):
 JSON_REPORT_FILE = os.path.join(REPORT_DIR, "report.json")
 HTML_REPORT_FILE = os.path.join(REPORT_DIR, "test_report.html")
 
+def archive_previous_report():
+    if os.path.exists(JSON_REPORT_FILE):
+        try:
+            creation_time = os.path.getctime(JSON_REPORT_FILE)
+        except Exception:
+            creation_time = datetime.now().timestamp()
+        timestamp = datetime.fromtimestamp(creation_time).strftime("%Y%m%d_%H%M%S")
+        archived_file = os.path.join(REPORT_DIR, f"report_{timestamp}.json")
+        shutil.move(JSON_REPORT_FILE, archived_file)
+        print(f"Archived previous JSON report as: {archived_file}")
+
 def run_tests():
-    """
-    Run pytest with JSON reporting enabled.
-    """
     print("Running pytest with JSON report...")
+    archive_previous_report()
     cmd = ["pytest", "--json-report", f"--json-report-file={JSON_REPORT_FILE}"]
     result = subprocess.run(cmd, capture_output=True, text=True)
     print("Pytest stdout:")
@@ -38,9 +48,6 @@ def run_tests():
     return result.returncode
 
 def generate_html_report():
-    """
-    Read the JSON report and generate an HTML report.
-    """
     print("Generating HTML report from JSON report...")
     try:
         with open(JSON_REPORT_FILE, "r", encoding="utf-8") as f:
@@ -49,7 +56,6 @@ def generate_html_report():
         print(f"Error reading JSON report: {e}")
         return
 
-    # Extract summary information.
     summary = report.get("summary", {})
     total = summary.get("total", 0)
     passed = summary.get("passed", 0)
@@ -57,7 +63,6 @@ def generate_html_report():
     skipped = summary.get("skipped", 0)
     last_run = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
-    # Start building the HTML content.
     html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -95,7 +100,6 @@ def generate_html_report():
     .checkmark {{
       font-size: 1.2em;
     }}
-    /* Dark mode styles */
     @media (prefers-color-scheme: dark) {{
       body {{
         background-color: #121212;
@@ -124,7 +128,6 @@ def generate_html_report():
       <th>Timestamp</th>
     </tr>
     """
-
     results = report.get("results", [])
     if not results:
         html += """
@@ -137,7 +140,6 @@ def generate_html_report():
             test_name = item.get("nodeid", "Unknown")
             outcome = item.get("outcome", "unknown")
             duration = item.get("duration", 0)
-            # Using the overall last_run as timestamp for simplicity.
             timestamp = last_run
             outcome_class = "passed" if outcome == "passed" else "failed" if outcome == "failed" else "skipped"
             checkmark = "&#10004;" if outcome == "passed" else "&#10008;" if outcome == "failed" else ""

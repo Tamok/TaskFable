@@ -2,7 +2,7 @@
 const CONFIG = {
   BACKEND_URL: "http://localhost:8000",
   POLL_INTERVAL: 5000, // ms
-  VERSION: "0.2.7",
+  VERSION: "0.3.1",
   TIMEZONES: [
     { value: "UTC-12:00", label: "UTC-12:00 (International Date Line West)" },
     { value: "UTC-11:00", label: "UTC-11:00 (Niue, American Samoa)" },

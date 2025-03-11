@@ -1,0 +1,17 @@
+.activity-log-panel {
+    padding: 10px;
+    background-color: #fafafa;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    color: #333;
+  }
+  .activity-log-panel ul {
+    list-style-type: disc;
+    margin-left: 20px;
+  }
+  body.dark .activity-log-panel {
+    background-color: #1e1e1e;
+    border-color: #555;
+    color: #eee;
+  }
+  

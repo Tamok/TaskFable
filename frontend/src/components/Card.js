@@ -5,7 +5,7 @@ import CONFIG from "../config";
 import { logFrontendEvent } from "../utils/logger";
 import { formatTimestamp } from "../utils/time";  
 
-function Card({ task, refreshTasks, user }) {
+function Card({ task, refreshTasks, user, isSpectator }) {
   const [isEditingDescription, setIsEditingDescription] = useState(false);
   const [newDescription, setNewDescription] = useState(task.description);
   const [commentText, setCommentText] = useState("");
@@ -13,6 +13,7 @@ function Card({ task, refreshTasks, user }) {
   const [editingCommentText, setEditingCommentText] = useState("");
   const [showHistory, setShowHistory] = useState(false);
 
+  // Determine available status transitions.
   let availableStatuses = [];
   if (task.status === "To-Do") {
     availableStatuses = ["Doing"];
@@ -24,10 +25,11 @@ function Card({ task, refreshTasks, user }) {
 
   const isOwner = task.owner_username === user.username;
   const isCoOwner = task.co_owners && task.co_owners.includes(user.username);
-  // A task is actionable if it's not locked or the user is the owner or a co-owner.
-  const canAct = !task.locked || isOwner || isCoOwner;
+  // Only allow actions if the user is not a spectator.
+  const canAct = !isSpectator && (!task.locked && (isOwner || isCoOwner));
 
   const handleStatusChange = async (newStatus) => {
+    if (isSpectator) return; // Prevent spectators from acting.
     if (task.status === "To-Do" && newStatus === "Doing" && !user.skip_confirm_begin) {
       const confirmed = window.confirm("Once you begin your adventure, there is no turning back. Proceed?");
       if (!confirmed) return;
@@ -49,6 +51,7 @@ function Card({ task, refreshTasks, user }) {
   };
 
   const handleAddComment = async () => {
+    if (isSpectator) return;
     if (!commentText) return;
     try {
       await axios.post(`${CONFIG.BACKEND_URL}/tasks/comment`, {
@@ -65,6 +68,7 @@ function Card({ task, refreshTasks, user }) {
   };
 
   const handleEditDescription = async () => {
+    if (isSpectator) return;
     try {
       await axios.put(`${CONFIG.BACKEND_URL}/tasks/${task.id}/edit?username=${user.username}`, {
         description: newDescription
@@ -78,6 +82,7 @@ function Card({ task, refreshTasks, user }) {
   };
 
   const handleEditComment = async (commentId) => {
+    if (isSpectator) return;
     try {
       await axios.put(`${CONFIG.BACKEND_URL}/tasks/comment/edit`, {
         comment_id: commentId,
@@ -94,7 +99,7 @@ function Card({ task, refreshTasks, user }) {
     }
   };
 
-  // If the task is private and the user is not the owner, show a simplified card.
+  // For private tasks, show a simplified view if the user is not the owner.
   if (task.is_private && !isOwner) {
     return (
       <div className={`card ${task.color}`}>
@@ -116,7 +121,11 @@ function Card({ task, refreshTasks, user }) {
       <h3 title="Task title and status">
         {task.title}{" "}
         {task.is_private && <span title="This is a private task" style={{ marginLeft: "5px" }}>🙈</span>}
-        {task.locked && <span title={isOwner || isCoOwner ? "Locked Task - you can modify it" : "Locked Task - only the owner/co-owners can modify"} style={{ marginLeft: "5px" }}>🔒</span>}
+        {task.locked && (
+          <span title={isOwner || isCoOwner ? "Locked Task - you can modify it" : "Locked Task - only the owner/co-owners can modify"} style={{ marginLeft: "5px" }}>
+            🔒
+          </span>
+        )}
         <br />
         <small title="Task owner and co-owners">
           Owner: {task.owner_username}
@@ -124,7 +133,7 @@ function Card({ task, refreshTasks, user }) {
         </small>
       </h3>
       <div className="description" title="Task description">
-        {isEditingDescription ? (
+        {isEditingDescription && !isSpectator ? (
           <>
             <textarea
               value={newDescription}
@@ -138,7 +147,7 @@ function Card({ task, refreshTasks, user }) {
         ) : (
           <>
             <p>{task.description}</p>
-            {(isOwner || isCoOwner) && task.status !== "Done" && (
+            {(isOwner || isCoOwner) && task.status !== "Done" && !isSpectator && (
               <button
                 className="edit-icon"
                 onClick={() => setIsEditingDescription(true)}
@@ -163,50 +172,57 @@ function Card({ task, refreshTasks, user }) {
             </button>
           ))}
       </div>
-      <div className="comments" title="Task comments">
-        <h4>Comments</h4>
-        {task.comments && task.comments.map((comment) => (
-          <div key={comment.id} className="comment">
-            {comment.owner_username === user.username && (
-              <button
-                className="edit-icon"
-                onClick={() => {
-                  setEditingCommentId(comment.id);
-                  setEditingCommentText(comment.content);
-                }}
-                title="Edit your comment"
-              >
-                ✏
-              </button>
-            )}
-            <strong className="comment-author" title="Comment author">{comment.owner_username}:</strong>
-            {editingCommentId === comment.id ? (
-              <>
-                <input
-                  type="text"
-                  value={editingCommentText}
-                  onChange={(e) => setEditingCommentText(e.target.value)}
-                  className="input-comment-edit"
-                  title="Edit comment text"
-                />
-                <button onClick={() => handleEditComment(comment.id)} className="btn" title="Save edited comment">Save</button>
-                <button onClick={() => setEditingCommentId(null)} className="btn" title="Cancel editing comment">Cancel</button>
-              </>
-            ) : (
-              <span className="comment-text" title="Comment text">{comment.content}</span>
-            )}
-          </div>
-        ))}
-        <input
-          type="text"
-          placeholder="Add a comment..."
-          value={commentText}
-          onChange={(e) => setCommentText(e.target.value)}
-          className="input-comment"
-          title="Type a comment here"
-        />
-        <button onClick={handleAddComment} className="btn" title="Submit your comment">Add Comment</button>
-      </div>
+      {/* Comments Section */}
+      {!isSpectator ? (
+        <div className="comments" title="Task comments">
+          <h4>Comments</h4>
+          {task.comments && task.comments.map((comment) => (
+            <div key={comment.id} className="comment">
+              {comment.owner_username === user.username && (
+                <button
+                  className="edit-icon"
+                  onClick={() => {
+                    setEditingCommentId(comment.id);
+                    setEditingCommentText(comment.content);
+                  }}
+                  title="Edit your comment"
+                >
+                  ✏
+                </button>
+              )}
+              <strong className="comment-author" title="Comment author">{comment.owner_username}:</strong>
+              {editingCommentId === comment.id ? (
+                <>
+                  <input
+                    type="text"
+                    value={editingCommentText}
+                    onChange={(e) => setEditingCommentText(e.target.value)}
+                    className="input-comment-edit"
+                    title="Edit comment text"
+                  />
+                  <button onClick={() => handleEditComment(comment.id)} className="btn" title="Save edited comment">Save</button>
+                  <button onClick={() => setEditingCommentId(null)} className="btn" title="Cancel editing comment">Cancel</button>
+                </>
+              ) : (
+                <span className="comment-text" title="Comment text">{comment.content}</span>
+              )}
+            </div>
+          ))}
+          <input
+            type="text"
+            placeholder="Add a comment..."
+            value={commentText}
+            onChange={(e) => setCommentText(e.target.value)}
+            className="input-comment"
+            title="Type a comment here"
+          />
+          <button onClick={handleAddComment} className="btn" title="Submit your comment">Add Comment</button>
+        </div>
+      ) : (
+        <div className="comments read-only" title="Comments are disabled for spectators">
+          <p>Comments are disabled in spectator mode.</p>
+        </div>
+      )}
       <div className="history" title="Task history">
         <h4>
           History

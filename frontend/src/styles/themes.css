@@ -106,3 +106,23 @@ body.dark .story {
     border: 1px solid #555;
   }
   
+  /* Fancy scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f0f0f0;
+}
+::-webkit-scrollbar-thumb {
+  background-color: #2684FF;
+  border-radius: 4px;
+  border: 2px solid #f0f0f0;
+}
+body.dark ::-webkit-scrollbar-track {
+  background: #2e2e2e;
+}
+body.dark ::-webkit-scrollbar-thumb {
+  background-color: #c0392b;
+  border: 2px solid #2e2e2e;
+}

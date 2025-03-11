@@ -3,23 +3,33 @@ import React from "react";
 import Card from "./Card";
 import { Droppable, Draggable } from "@hello-pangea/dnd";
 
-function Column({ title, tasks, refreshTasks, user, manualOrderMode }) {
+function Column({ title, tasks, refreshTasks, user, manualOrderMode, isSpectator }) {
   if (manualOrderMode) {
     return (
       <div className="column">
         <h2>{title}</h2>
-        <Droppable droppableId={title}>
+        <Droppable droppableId={title} isDropDisabled={isSpectator}>
           {(provided) => (
             <div ref={provided.innerRef} {...provided.droppableProps}>
               {tasks.map((task, index) => (
-                <Draggable key={task.id} draggableId={`task-${task.id}`} index={index}>
+                <Draggable
+                  key={task.id}
+                  draggableId={`task-${task.id}`}
+                  index={index}
+                  isDragDisabled={isSpectator}
+                >
                   {(provided) => (
                     <div 
                       ref={provided.innerRef} 
                       {...provided.draggableProps} 
                       {...provided.dragHandleProps}
                     >
-                      <Card task={task} refreshTasks={refreshTasks} user={user} />
+                      <Card 
+                        task={task} 
+                        refreshTasks={refreshTasks} 
+                        user={user} 
+                        isSpectator={isSpectator} 
+                      />
                     </div>
                   )}
                 </Draggable>
@@ -35,7 +45,13 @@ function Column({ title, tasks, refreshTasks, user, manualOrderMode }) {
       <div className="column">
         <h2>{title}</h2>
         {tasks.map((task) => (
-          <Card key={task.id} task={task} refreshTasks={refreshTasks} user={user} />
+          <Card 
+            key={task.id} 
+            task={task} 
+            refreshTasks={refreshTasks} 
+            user={user} 
+            isSpectator={isSpectator} 
+          />
         ))}
       </div>
     );

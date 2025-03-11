@@ -16,7 +16,7 @@ import logging
 logger = logging.getLogger("backend-logger")
 
 # Define the current database version for initial install.
-CURRENT_DB_VERSION = "0.2.6"
+CURRENT_DB_VERSION = "0.3.1"
 
 def create_db_version_table():
     metadata = MetaData()

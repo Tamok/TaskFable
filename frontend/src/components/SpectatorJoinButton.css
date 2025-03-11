@@ -1,0 +1,28 @@
+/* SpectatorJoinButton.css */
+.spectator-join {
+    margin: 10px 0;
+    text-align: center;
+  }
+  
+  .join-btn {
+    padding: 10px 15px;
+    background-color: #2684FF;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 1em;
+    cursor: pointer;
+  }
+  
+  .join-btn:hover {
+    background-color: #1b6ac9;
+  }
+  
+  body.dark .join-btn {
+    background-color: #c0392b;
+  }
+  
+  body.dark .join-btn:hover {
+    background-color: #a93226;
+  }
+  

@@ -13,17 +13,21 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@hello-pangea/dnd": "^18.0.1",
     "axios": "^1.8.1",
     "moment-timezone": "^0.5.47",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.0.1",
+    "react-router-dom": "^7.3.0",
     "react-scripts": "^5.0.1",
-    "react-select": "^5.10.0",
-    "@hello-pangea/dnd": "^13.1.0"
+    "react-select": "^5.10.0"
   },
   "eslintConfig": {
-    "extends": ["react-app", "react-app/jest"],
+    "extends": [
+      "react-app",
+      "react-app/jest"
+    ],
     "rules": {
       "react-hooks/rules-of-hooks": "error",
       "react-hooks/exhaustive-deps": "warn"

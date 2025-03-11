@@ -67,6 +67,7 @@ class QuestLogInvite(Base):
     quest_log_id = Column(Integer, ForeignKey("quest_logs.id"), nullable=False)
     token = Column(String, unique=True, nullable=False, default=lambda: str(uuid.uuid4()))
     used = Column(Boolean, default=False)
+    revoked = Column(Boolean, default=False)
     expires_at = Column(DateTime, nullable=True)
     is_permanent = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)

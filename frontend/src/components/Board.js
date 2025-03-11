@@ -6,7 +6,7 @@ import { DragDropContext } from "@hello-pangea/dnd";
 
 const columns = ["To-Do", "Doing", "Waiting", "Done"];
 
-function Board({ tasks, refreshTasks, user }) {
+function Board({ tasks, refreshTasks, user, isSpectator }) {
   const [sortField, setSortField] = useState("");
   const [sortOrder, setSortOrder] = useState("asc");
   const [filterText, setFilterText] = useState("");
@@ -16,22 +16,23 @@ function Board({ tasks, refreshTasks, user }) {
   // Initialize or update manual order when tasks change (only in manual mode).
   useEffect(() => {
     if (sortField !== "") return; // only update in manual order mode
-    const newOrder = { ...manualOrder };
-    columns.forEach((col) => {
-      const colTasks = tasks.filter((t) => t.status === col);
-      const existingOrder = newOrder[col] || [];
-      // Retain ordering for tasks that still exist; append new tasks.
-      const updatedOrder = [
-        ...existingOrder.filter((id) => colTasks.some((t) => t.id === id)),
-        ...colTasks.filter((t) => !existingOrder.includes(t.id)).map((t) => t.id)
-      ];
-      newOrder[col] = updatedOrder;
+    setManualOrder((prevOrder) => {
+      const newOrder = { ...prevOrder };
+      columns.forEach((col) => {
+        const colTasks = tasks.filter((t) => t.status === col);
+        const existingOrder = newOrder[col] || [];
+        // Retain ordering for tasks that still exist; append new tasks.
+        const updatedOrder = [
+          ...existingOrder.filter((id) => colTasks.some((t) => t.id === id)),
+          ...colTasks.filter((t) => !existingOrder.includes(t.id)).map((t) => t.id)
+        ];
+        newOrder[col] = updatedOrder;
+      });
+      return newOrder;
     });
-    setManualOrder(newOrder);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tasks, sortField]);
 
-  // Helper to compute "last modified" as the timestamp of the latest history record (or creation time if none).
+  // Helper to compute last modified timestamp.
   const getLastModified = (task) => {
     if (task.history && task.history.length > 0) {
       return task.history[task.history.length - 1].timestamp;
@@ -39,14 +40,13 @@ function Board({ tasks, refreshTasks, user }) {
     return task.created_at;
   };
 
+  // Helper to get created_at timestamp.
   const getCreatedAt = (task) => {
-    console.log(tasks.map(task => ({ id: task.id, created_at: new Date(task.created_at).getTime() })));
     return task.created_at;
   };
 
   // Filter and order tasks per column.
   const getOrderedTasks = (colTasks, col) => {
-    // Filter: check all card content (title, owner, description, and comment content).
     let filtered = colTasks.filter((task) => {
       const text = filterText.toLowerCase();
       return (
@@ -57,7 +57,6 @@ function Board({ tasks, refreshTasks, user }) {
       );
     });
     if (sortField !== "") {
-      // Sorting mode: sort by the chosen field.
       filtered.sort((a, b) => {
         let aValue, bValue;
         switch (sortField) {
@@ -71,8 +70,8 @@ function Board({ tasks, refreshTasks, user }) {
             break;
           case "created_at":
             aValue = new Date(getCreatedAt(a)).getTime();
-            bValue = new Date(getCreatedAt(b)).getTime();         
-            break;            
+            bValue = new Date(getCreatedAt(b)).getTime();
+            break;
           case "last_modified":
             aValue = new Date(getLastModified(a)).getTime();
             bValue = new Date(getLastModified(b)).getTime();
@@ -87,7 +86,6 @@ function Board({ tasks, refreshTasks, user }) {
       });
       return filtered;
     } else {
-      // Manual order mode: order tasks based on manualOrder state.
       const order = manualOrder[col] || [];
       filtered.sort((a, b) => order.indexOf(a.id) - order.indexOf(b.id));
       return filtered;
@@ -96,26 +94,33 @@ function Board({ tasks, refreshTasks, user }) {
 
   // Handle drag-and-drop events to update manual order.
   const onDragEnd = (result) => {
+    if (isSpectator) return; // Spectators cannot reorder cards.
     const { source, destination } = result;
     if (!destination) return;
-    if (source.droppableId !== destination.droppableId) return; // allow reordering only within the same column
+    if (source.droppableId !== destination.droppableId) return; // only allow reordering within the same column
     const col = source.droppableId;
     const newOrder = Array.from(manualOrder[col] || []);
     const [removed] = newOrder.splice(source.index, 1);
     newOrder.splice(destination.index, 0, removed);
     setManualOrder((prev) => ({ ...prev, [col]: newOrder }));
+    refreshTasks();
   };
+
+  // Only show the filter bar if not in spectator mode.
+  const showFilter = !isSpectator;
 
   return (
     <div>
-      <SortFilterBar 
-        sortField={sortField}
-        setSortField={setSortField}
-        sortOrder={sortOrder}
-        setSortOrder={setSortOrder}
-        filterText={filterText}
-        setFilterText={setFilterText}
-      />
+      {showFilter && (
+        <SortFilterBar 
+          sortField={sortField}
+          setSortField={setSortField}
+          sortOrder={sortOrder}
+          setSortOrder={setSortOrder}
+          filterText={filterText}
+          setFilterText={setFilterText}
+        />
+      )}
       <DragDropContext onDragEnd={onDragEnd}>
         <div className="board">
           {columns.map((col) => {
@@ -129,6 +134,7 @@ function Board({ tasks, refreshTasks, user }) {
                 refreshTasks={refreshTasks} 
                 user={user} 
                 manualOrderMode={sortField === ""}
+                isSpectator={isSpectator}
               />
             );
           })}

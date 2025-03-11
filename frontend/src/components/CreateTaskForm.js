@@ -22,13 +22,18 @@ function CreateTaskForm({ refreshTasks, currentUser, currentQuestLog, isDarkMode
   const [allUsernames, setAllUsernames] = useState([]);
 
   useEffect(() => {
-    axios.get(`${CONFIG.BACKEND_URL}/users/list`)
-      .then((res) => {
-        const others = res.data.filter((u) => u !== currentUser.username);
-        setAllUsernames(others);
-      })
-      .catch((err) => console.error("Error fetching usernames:", err));
-  }, [currentUser]);
+    if (currentQuestLog && currentUser) {
+      axios.get(`${CONFIG.BACKEND_URL}/questlogs/${currentQuestLog.id}/participants`)
+        .then((res) => {
+          const options = res.data
+            .filter(u => u.username !== currentUser.username)
+            .map(u => ({ value: u.username, label: u.username }));
+          setAllUsernames(options);
+        })
+        .catch((err) => console.error("Error fetching participants:", err));
+    }
+  }, [currentQuestLog, currentUser]);
+  
 
   const customSelectStyles = {
     control: (provided, state) => ({

@@ -1,6 +1,6 @@
 # TaskFable
 
-**Version:** 0.3.0
+**Version:** 0.3.1
 
 ## Overview
 TaskFable is a web application that turns task management into an engaging adventure. Users create tasks (quests), add comments, and gain XP and currency as they progress. The application supports features like private tasks, co-owner collaboration, and a story feed that weaves task events into mini-adventures.

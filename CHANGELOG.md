@@ -1,5 +1,41 @@
 # Changelog
 
+## [0.3.1] - 2025-03-11
+
+### Added
+- **Invitation Handling Enhancements:**
+  - New endpoint (`/questlogs/invite/details`) added to return board details (name, owner, expiry, etc.) based on an invite token.
+  - Implemented a new `InviteChoicePage` component that displays the board name, owner, and expiry information along with options to “Join” (upgrade membership) or “Spectate”.
+- **Spectator Mode Enhancements:**
+  - Spectators (users with a "spectator" role) can no longer create tasks, comment, or reorder/move cards.
+  - Added a `SpectatorJoinButton` component to allow a spectator to upgrade their membership to a full member.
+  - When in spectator mode, the filter bar is hidden and interactive elements (such as task creation forms and invite-generation controls) are omitted.
+- **Dynamic Login/Invite Routing:**
+  - Updated the login flow to preserve an invite token in the URL so that a logged‑in user is routed to the invite choice page instead of being forced to log in again.
+- **Dark Mode Improvements:**
+  - Updated CSS for inputs, buttons, invite panels, and the spectator join UI to meet dark theme standards.
+- **Logging & Human‑Readable Activity Logs:**
+  - Improved logging in both backend and frontend.
+  - Activity logs now display human‑readable actions (e.g. "Invite Generated", "Invite Revoked") with proper timestamps.
+
+### Changed
+- Updated **App.js** to:
+  - Check for an `invite_token` in the URL and render `InviteChoicePage` accordingly.
+  - Pass down an `isSpectator` flag to child components.
+  - Omit the CreateTaskForm and related interactive controls when the user is a spectator.
+- Updated **Board.js**, **Column.js**, and **Card.js** to:
+  - Accept and propagate an `isSpectator` prop.
+  - Disable drag‑and‑drop, commenting, editing, and other interactive features when in spectator mode.
+  - Hide the filter bar in spectator mode.
+- Updated useEffect hooks to use functional state updates (e.g. in Board.js) to resolve ESLint dependency warnings.
+
+### Fixed
+- Resolved issues where spectators could still comment, edit, or move cards.
+- Fixed login behavior so that clicking an invite link preserves the user’s login state rather than logging them out.
+- Fixed CSS inconsistencies in dark mode for text inputs, buttons, and invite panels.
+- Corrected ESLint warnings regarding missing dependencies in useEffect hooks.
+- Fixed the persistent invite token issue to properly route logged‑in users to the invite choice view.
+
 ## [0.3.0] - 2025-03-10
 ### Added
 - **Multi-Quest Log (QL) Support:**  
